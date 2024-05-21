@@ -58,6 +58,7 @@ module.exports = {
         new MiniCssExtractPlugin({
             filename: 'style.css', // Specify the name for the generated CSS file
         }),
+        new BundleAnalyzerPlugin(),
     ],
     optimization: {
         minimizer: [
