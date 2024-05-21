@@ -7,11 +7,15 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack --mode production",
     "dev": "webpack serve --open --mode=development",
-    "start": "webpack serve --open --mode=production"
+    "start": "webpack serve --open --mode=production",
+    "deploy": "gh-pages -d dist"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+  },
+  "devDependencies": {
+    "webpack-dev-server": "^5.0.4",
     "css-loader": "^7.1.1",
     "css-minimizer-webpack-plugin": "^7.0.0",
     "html-webpack-plugin": "^5.6.0",
@@ -19,9 +23,7 @@
     "ts-loader": "^9.5.1",
     "webpack": "^5.91.0",
     "webpack-bundle-analyzer": "^4.10.2",
-    "webpack-cli": "^5.1.4"
-  },
-  "devDependencies": {
-    "webpack-dev-server": "^5.0.4"
+    "webpack-cli": "^5.1.4",
+    "gh-pages": "^3.2.3"
   }
 }
