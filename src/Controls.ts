@@ -1,80 +1,70 @@
-import { TypedArray, UniformBlockHandler } from "./gl-utils";
+import { UniformBlockHandler } from "./gl-utils";
 
 /**
-    Binds an event target to update a uniform block buffer on the CPU.
-    @param target - The event target.
-    @param name - The event name.
-    @param dataReturn - The function to return the data from the event.
-    @param handler - The uniform block handler.
-    @param bufferOffset - In elements. (Default: 0)
- */
-export function listener(
-    target: any, 
-    name: string,
-    handler: UniformBlockHandler, 
-    bufferOffset: number = 0, 
-    dataReturn: (event: any) => TypedArray, 
-) {
-    target.addEventListener(name, (e:any) => { 
-        handler.set(dataReturn(e), bufferOffset); 
-    });
-}
-
-/**
- * Bind multiple events to update the uniform buffer on CPU.
- * @param target - The event target.
+ * Outputs coords, delta, and zoom to CPU uniform buffer.
+ * @param target - The canvas element.
  * @param handler - The uniform block handler.
- * @param coordsOffset - Mouse/touch coords offset in elements for the uniform buffer. (Default: 0)
- * @param zoomOffset - Wheel/pinch zoom offset in elements for the uniform buffer. (Default: 2)
+ * @param coordsOffset - The offset in elements for the coords in the uniform buffer.
+ * @param deltaOffset - The offset in elements for the delta in the uniform buffer.
+ * @param zoomOffset - The offset in elements for the zoom in the uniform buffer.
+ * @param zoomRange - The range of zoom values.
+ * @param tripleTap - A function to call on triple tap.
  */
-export function touchListener(
+export function touchStream(
     target: HTMLCanvasElement,
     handler: UniformBlockHandler,
-    coordsOffset: number = 0,
-    zoomOffset: number = 2,
-) { 
-    let dragging = false;
-    let zoom = 0;
-    let coords = [0, 0];
-    let dx = 0, dy = 0;
-
-    const drag = (e: PointerEvent) => {
-        dx += -e.movementX * 2 / (target.clientWidth * Math.exp(zoom)),
-        dy += e.movementY * 2 / (target.clientHeight * Math.exp(zoom));
-
-        return new Float32Array([
-            dx, dy
-        ])
-    };
-
-    const wheel = (e: WheelEvent) => {
-        zoom += e.deltaY / target.clientHeight;
-        zoom = Math.max(zoom, 0.1); // min zoom
-        return new Float32Array([zoom]);
-    }
+    coordsOffset: number,
+    deltaOffset: number,
+    zoomOffset: number,
+    tripleTap: () => void,
+) : void {
     
-    const pinch = (e: PointerEvent) => {
-        return new Float32Array([Math.hypot(
-            e.movementX - coords[0],
-            e.movementY - coords[1]
-        )]);
-    };
-    
+    // Reciprocal of canvas resolution, for scaling.
+    const [W, H] = [1 / target.clientWidth, 1 / target.clientHeight],
+        S = 2, // pan sensitivity
+        Z = 2; // zoom sensitivity
+
+    let c: any[] = [], // pointerdown coords
+        i = 0, // pointerdown count
+        z = 0.01, // default zoom level
+        dx = 0, // delta x
+        dy = 0, // delta y
+        m = Math.exp(-z), // exp(-zoom)
+        ptrdistance = 0; // pointer distance
+
     target.addEventListener('pointerdown', (e) => {
-        dragging = true;
-        coords = [e.clientX, e.clientY];
+        c.push(e.clientX, e.clientY);
+        ptrdistance = Math.hypot(c[2] - c[0], c[3] - c[1]);
+        if (++i === 3) tripleTap(); 
     });
-    
-    target.addEventListener('pointerup', () => {
-        dragging = false;
-        coords = [0, 0];
-    });
-    
+
     target.addEventListener('pointermove', (e) => {
-        if (dragging) handler.set(drag(e), coordsOffset);
+        let x = e.movementX, 
+            y = e.movementY, 
+            p = e.clientX,
+            q = e.clientY;
+        if (i === 1 || i > 2) { // pan
+            target.setPointerCapture(e.pointerId);
+            handler.set(new Uint32Array([p, q]), coordsOffset);
+            handler.set(new Float32Array([dx -= x * H * m * S, dy += y * H * m * S]), deltaOffset);
+        } else if (i === 2) { // pinch
+            ptrdistance = Math.hypot(c[2] - c[0], c[3] - c[1]);
+            // ptr1.xy, ptr2.xy
+            // 2-swipe up/down
+            // handler.set(new Float32Array([z += s * H]), zoomOffset);
+            // pinch
+            handler.set(new Float32Array([z += ptrdistance]), zoomOffset);
+        }
     });
-    
+
+    target.addEventListener('pointercancel', () => i = 0);
+    target.addEventListener('pointerup', () => i = 0);
+    target.addEventListener('pointerout', () => i = 0);
+    target.addEventListener('pointerleave', () => i = 0);
+
     target.addEventListener('wheel', (e) => {
-        handler.set(wheel(e), zoomOffset);
-    }, { passive: true });
+        z -= e.deltaY * H * Z,
+        m = Math.exp(-z);
+        handler.set(new Float32Array([z]), zoomOffset);
+    });
 }

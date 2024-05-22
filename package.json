@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack --mode production",
-    "dev": "webpack serve --open --mode=development",
-    "start": "webpack serve --open --mode=production",
+    "build": "cd example && webpack --mode production",
+    "dev": "cd example && webpack serve --open --mode=development",
+    "start": "cd example && webpack serve --open --mode=production",
     "deploy": "gh-pages -d dist"
   },
   "author": "",
