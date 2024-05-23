@@ -197,7 +197,7 @@ export function newInputRange(
         tooltipSpan = Object.assign(document.createElement('span'), { 
             className: 'tooltip', 
             id: `${label}-tooltip`,
-            textContent: value.toString()
+            textContent: value.toString(),
         });
 
     labelElement.setAttribute('for', label);

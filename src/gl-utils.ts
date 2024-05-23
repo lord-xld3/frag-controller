@@ -140,9 +140,9 @@ export interface UniformBlockHandler extends Pick<BufferObject, 'delete'> {
      */
     set(data: TypedArray, dstByteOffset?: number, srcOffset?: number, length?: number): void;
     /**
-     * Flushes the buffer to the GPU.
+     * Copies the buffer to the GPU.
      */
-    flush(): void;
+    update(): void;
 }
 
 export default function init(
@@ -268,7 +268,7 @@ export default function init(
             new (data.constructor as any)(_buffer, dstStartByte, length).set(data, srcStartByte);
         }
 
-        function flush() {
+        function update() {
             bind();
             bufferObject.setBuffer(_buffer);
         }
@@ -277,7 +277,7 @@ export default function init(
         
         bindBlock(binding);
         const _buffer = new ArrayBuffer(gl.getActiveUniformBlockParameter(program, blockIndex, gl.UNIFORM_BLOCK_DATA_SIZE));
-        flush();
+        update();
 
         return {
             delete: bufferObject.delete,
@@ -285,7 +285,7 @@ export default function init(
             bind,
             unbind,
             set,
-            flush,
+            update,
         };
     }
 
