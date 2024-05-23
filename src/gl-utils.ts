@@ -1,3 +1,5 @@
+import { BaseStreamHandler, StreamHandler, baseStream } from "./Controls";
+
 export type TypedArray = 
 Int8Array | Uint8Array | 
 Int16Array | Uint16Array | 
@@ -55,17 +57,26 @@ interface GLContext extends WebGL2RenderingContext {
      * Binds a uniform block to the current program and returns a handler.
      * @param program - The shader program.
      * @param block - The name of the uniform block in the shader program.
-     * @param data - The data to bind to the uniform block.
      * @param binding - The binding point for the uniform block. (Default: 0)
      * @param usage - The usage pattern of the buffer. (Default: STATIC_DRAW)
      */
     bindUniforms: (
         program: WebGLProgram, 
         block: string,
-        data: TypedArray,
         binding?: number, 
         usage?: GLenum
     ) => UniformBlockHandler;
+
+    /**
+     * Binds a baseStream to the canvas and uniform block.
+     */
+    bindTouch: (
+        canvas: HTMLCanvasElement, 
+        program: WebGLProgram, 
+        block: string, 
+        zoom?: number,
+        binding?: number,
+    ) => [BaseStreamHandler, UniformBlockHandler];
 }
 
 /**
@@ -92,7 +103,7 @@ export interface BufferObject {
      * Sets the contents of the WebGLBuffer.
      * @param data - The data used to set the buffer contents.
      */
-    setBuffer(data: TypedArray): void;
+    setBuffer(data: ArrayBuffer): void;
 }
 
 /**
@@ -106,14 +117,17 @@ export interface UniformBlockHandler extends BufferObject {
      */
     bindBlock(binding: number): void,
     /**
-     * Sets data on CPU buffer.
-     * @note Optional params are in elements, not bytes.
+     * Modify subdata in the array buffer.
+     * @param data - The data to update the buffer with.
+     * @param dstByteOffset - The offset in bytes to start updating the buffer.
+     * @param srcOffset - The offset in elements to start copying from the data.
+     * @param length - The number of elements to copy from the data.
      */
-    set(data: TypedArray, dstOffset?: number, srcOffset?: number, length?: number): void,
+    set(data: TypedArray, dstByteOffset?: number, srcOffset?: number, length?: number): void;
     /**
-     * Copies CPU buffer to GPU buffer.
+     * Flushes the buffer to the GPU.
      */
-    flush(): void,
+    flush(): void;
 }
 
 export default function init(
@@ -154,7 +168,7 @@ export default function init(
             delete() {
                 gl.deleteBuffer(buf);
             },
-            setBuffer(data: TypedArray) {
+            setBuffer(data: ArrayBuffer) {
                 gl.bufferData(target, data, usage);
             },
         };
@@ -179,6 +193,7 @@ export default function init(
         gl.canvas.height = height;
         gl.viewport(0, 0, width, height);
     },
+
     gl.newProgram = (vert: string, frag: string) => {
         const program = gl.createProgram()!,
             vs = compileShader(gl.VERTEX_SHADER, vert),
@@ -192,6 +207,7 @@ export default function init(
         }
         return program;
     },
+
     gl.useSSQ = (frag: string) => {
         const p = gl.newProgram(`#version 300 es\nin vec2 a;void main(){gl_Position=vec4(a,0,1);}`, frag);
         gl.useProgram(p);
@@ -202,22 +218,20 @@ export default function init(
         gl.vertexAttribPointer(l, 2, gl.FLOAT, false, 0, 0);
         return p;
     },
+
     gl.drawSSQ = () => gl.drawArrays(gl.TRIANGLES, 0, 6),
+
     gl.bindUniforms = (
         program: WebGLProgram, 
         block: string, 
-        data: TypedArray = new Float32Array(0),
         binding: number = 0, 
         usage: GLenum = gl.STATIC_DRAW,
     ): UniformBlockHandler => {
         
         const blockIndex = gl.getUniformBlockIndex(program, block);
         if (blockIndex === gl.INVALID_INDEX) {
-            console.warn(`Uniform block "${block}" not found in program: ${program}`);
+            console.warn(`Uniform block "${block}" not found in program: `, program);
         }
-
-        const bufferObject = createBufferObject(gl.UNIFORM_BUFFER, usage),
-            _buffer = padNBytes(data, 16);
 
         function bindBlock(binding: number) {
             gl.uniformBlockBinding(program, blockIndex, binding);
@@ -233,17 +247,21 @@ export default function init(
             bufferObject.unbind();
         }
 
-        function set(data: TypedArray, dstByteOffset: number = 0, srcOffset: number = 0, length: number = data.length) {
-            _buffer.set(data.slice(srcOffset, length), dstByteOffset);
+        function set(data: TypedArray, dstStartByte: number = 0, srcStartByte: number = 0, length: number = data.length) {
+            // 1. Construct a slice of the buffer using data's constructor.
+            // 2. Set a slice of data to the buffer.
+            new (data.constructor as any)(_buffer, dstStartByte, length).set(data, srcStartByte);
         }
 
         function flush() {
+            bind();
             bufferObject.setBuffer(_buffer);
         }
+
+        const bufferObject = createBufferObject(gl.UNIFORM_BUFFER, usage);
         
-        bind();
         bindBlock(binding);
-        set(data);
+        const _buffer = new ArrayBuffer(gl.getActiveUniformBlockParameter(program, blockIndex, gl.UNIFORM_BLOCK_DATA_SIZE));
         flush();
 
         return {
@@ -256,24 +274,16 @@ export default function init(
         };
     }
 
-    return gl;
-}
+    gl.bindTouch = function(
+        canvas: HTMLCanvasElement,
+        program: WebGLProgram,
+        blockName: string,
+        zoom: number = 1,
+        binding: number = 0,
+    ): [BaseStreamHandler, UniformBlockHandler] {
+        const handler = gl.bindUniforms(program, blockName, binding);
+        return [baseStream(canvas, handler, zoom), handler];
+    }
 
-/**
- * Pads a TypedArray to the next multiple of n bytes.
- * @param data - An TypedArray to pad.
- * @param n - The number of bytes to pad to.
- * @returns - A new TypedArray with the data padded to n bytes.
- */
-function padNBytes(data: TypedArray, n: number): TypedArray {
-    
-    // (length + n - 1) AND NOT(n - 1) 
-    const alignedSize = (data.byteLength + n - 1) & ~(n - 1);
-    
-    // call the constructor of the TypedArray to create the same type
-    const alignedBuffer = new (data.constructor as any)(alignedSize);
-    
-    // set the data in the newly padded buffer
-    alignedBuffer.set(data);
-    return alignedBuffer;
+    return gl;
 }
