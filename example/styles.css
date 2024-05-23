@@ -1,3 +1,4 @@
+/* General reset and full-screen settings */
 body, html {
     margin: 0;
     padding: 0;
@@ -6,6 +7,7 @@ body, html {
     height: 100%;
 }
 
+/* Canvas styling */
 canvas {
     width: 100%;
     height: 100%;
@@ -13,6 +15,7 @@ canvas {
     touch-action: none;
 }
 
+/* Panel styling */
 #panel {
     background-color: rgba(0, 0, 0, 0.75);
     position: absolute;
@@ -24,11 +27,12 @@ canvas {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 2% 2% 2%;
+    padding: 2%;
     overflow-y: auto;
     box-sizing: border-box;
 }
 
+/* Overlay styling */
 .overlay {
     height: 100%;
     color: white;
@@ -38,59 +42,62 @@ canvas {
     justify-content: space-evenly;
 }
 
+/* Overlay info styling */
 #overlay-info {
     user-select: none;
     height: min-content;
-    padding: 2% 2% 4%;
+    margin-bottom: 2%;
 }
 
+/* Overlay label styling */
 .overlay label {
     user-select: none;
-    padding: 2% 0;
+    padding: 1% 0;
 }
 
+/* Tooltip styling */
 .tooltip {
-    margin-left: 0;
     user-select: none;
     position: absolute;
     display: none;
-    padding: 2%;
+    padding: 1%;
     background-color: rgba(0, 0, 0, 0.75);
     top: 2%;
     right: 2%;
     text-align: end;
 }
 
+/* Tooltip visibility on input hover or active */
 input:active, input:hover + .tooltip {
-    display: block; /* Show tooltip when input is hovered over or active */
+    display: block;
 }
 
-/* === range theme and appearance === */
+/* Range input common styling */
 input[type="range"] {
     width: 100%;
-    height: 100%;
     padding: 0;
     margin: 0;
-}
-
-input[type="range"] {
+    background: #fff0;
+    overflow: hidden;
+    position: relative;
     color: #ef233c;
     --thumb-height: 100%;
     --track-height: 10%;
-    --track-color: rgba(0, 0, 0, 0.2);
+    --track-color: rgba(0, 0, 0, 0.1);
     --brightness-hover: 180%;
     --brightness-down: 80%;
     --clip-edges: 0.125em;
+    transition: all ease 100ms;
 }
 
 input[type="range"].win10-thumb {
     color: #2b2d42;
-
     --thumb-height: 1.375em;
     --thumb-width: 0.5em;
     --clip-edges: 0.0125em;
 }
 
+/* Dark mode styling */
 @media (prefers-color-scheme: dark) {
     html {
         background-color: #000;
@@ -110,11 +117,9 @@ input[type="range"].win10-thumb {
     }
 }
 
-/* === range commons === */
-input[type="range"] {
-    position: relative;
-    background: #fff0;
-    overflow: hidden;
+/* Range input hover, active, and disabled states */
+input[type="range"]:hover {
+    cursor: grab;
 }
 
 input[type="range"]:active {
@@ -127,76 +132,64 @@ input[type="range"]:disabled {
     cursor: not-allowed;
 }
 
-/* === WebKit specific styles === */
+/* WebKit specific styles */
 input[type="range"],
 input[type="range"]::-webkit-slider-runnable-track,
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    transition: all ease 100ms;
-}
-
-input[type="range"]::-webkit-slider-runnable-track,
-input[type="range"]::-webkit-slider-thumb {
-    position: relative;
 }
 
 input[type="range"]::-webkit-slider-thumb {
-
     width: 0.5rem;
     height: 1rem;
     background-color: currentColor;
-
-    /* Set clip-path to create a square shape */
     clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
 }
 
-
-input[type="range"]:hover::-webkit-slider-thumb {
-    width: 3rem;
-    height: 2rem;
-    filter: brightness(var(--brightness-hover));
-    cursor: grab;
-}
-
-input[type="range"]:active::-webkit-slider-thumb {
-    width:  0.5rem;
-    height: 2rem;
-    filter: brightness(var(--brightness-down));
-    cursor: grabbing;
-}
-
 input[type="range"]::-webkit-slider-runnable-track {
-    background: linear-gradient(var(--track-color) 0 0) scroll no-repeat center /
-        100% calc(var(--track-height) + 1px);
+    background: linear-gradient(var(--track-color) 0 0) scroll no-repeat center / 100% calc(var(--track-height) + 1px);
 }
 
 input[type="range"]:disabled::-webkit-slider-thumb {
     cursor: not-allowed;
 }
 
-/* === Firefox specific styles === */
-input[type="range"],
-input[type="range"]::-moz-range-track,
+/* Firefox specific styles */
 input[type="range"]::-moz-range-thumb {
-    appearance: none;
-    transition: all ease 100ms;
-    height: var(--thumb-height);
+    width: 0.5rem;
+    height: 1rem;
+    border-radius: 0;
+    border-width: 0;
+    background-color: currentColor;
 }
 
-input[type="range"]::-moz-range-track,
-input[type="range"]::-moz-range-thumb,
-input[type="range"]::-moz-range-progress {
-    background: #fff0;
+input[type="range"]::-moz-range-track {
+    background: linear-gradient(var(--track-color) 0 0) scroll no-repeat center / 100% calc(var(--track-height) + 1px);
 }
 
-input[type="range"]::-moz-range-thumb {
+/* Edge specific styles */
+input[type="range"]::-ms-track {
+    background: transparent;
+    border-color: transparent;
+    color: transparent;
+    width: 100%;
+    height: var(--track-height);
+    border-radius: 0.5rem;
+}
+
+input[type="range"]::-ms-fill-lower,
+input[type="range"]::-ms-fill-upper {
     background: currentColor;
-    border: 0;
-    width: var(--thumb-width, var(--thumb-height));
-    border-radius: var(--thumb-width, var(--thumb-height));
-    cursor: grab;
 }
 
-input[type="range"]:active::-moz-range-thumb {
-    cursor: grabbing;
+input[type="range"]::-ms-thumb {
+    width: 0.5rem;
+    height: 1rem;
+    background-color: currentColor;
+    border: none;
+    border-radius: 0.5rem;
+}
+
+input[type="range"]::-ms-tooltip {
+    display: none;
 }
