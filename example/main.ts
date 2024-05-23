@@ -36,6 +36,7 @@ const program = gl.useSSQ(frag);
 
 // Define control elements.
 const panel = document.getElementById('panel') as HTMLDivElement,
+    controlZoom = newInputRange(panel, 'Zoom', 0.01, 1e-4, 0.001, 12),
     controlMinIter = newInputRange(panel, 'Min Iterations', 80, 1, 1, 400),
     controlMaxIter = newInputRange(panel, 'Max Iterations', 400, 1, 80, 1e3),
     controlEscapeMin = newInputRange(panel, 'Min Escape Radius', 6, 1e-4, 0, 10),
@@ -80,6 +81,10 @@ uni.set(new Float32Array([
 uni.update();
 
 // Stream control elements to uniform block.
+controlZoom.oninput = () => {
+    stream.setZoom(controlZoom.valueAsNumber);
+};
+
 controlMinIter.oninput = () => {
     controlMaxIter.min = controlMinIter.value;
     uni.set(new Uint32Array([controlMinIter.valueAsNumber]), 0);
@@ -106,6 +111,16 @@ controlHue.oninput = () => {
         Math.cos(h + 1),
         Math.cos(h + 2),
     ]), 16);
+};
+
+// Fullscreen button.
+const fullscreen = document.getElementById('fullscreen') as HTMLButtonElement;
+fullscreen.onclick = () => {
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    } else {
+        canvas.requestFullscreen();
+    }
 };
 
 // Setup render loop.

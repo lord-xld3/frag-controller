@@ -27,9 +27,27 @@ canvas {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 2%;
+    padding: 1.5%;
     overflow-y: auto;
     box-sizing: border-box;
+}
+
+#fullscreen {
+    width: min-content;
+    height: min-content;
+    padding: 1% 1%;
+    cursor: pointer;
+    background-color: rgba(0, 0, 0, 0);
+    display: block;
+    border-style: none;
+}
+
+#overlay-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+    height: min-content;
 }
 
 /* Overlay styling */
@@ -65,10 +83,15 @@ canvas {
     top: 2%;
     right: 2%;
     text-align: end;
+    color: white;
+}
+
+#fullscreen-tooltip {
+    right: 10%;
 }
 
 /* Tooltip visibility on input hover or active */
-input:active, input:hover + .tooltip {
+input[type="range"]:active, input[type="range"]:hover + .tooltip {
     display: block;
 }
 

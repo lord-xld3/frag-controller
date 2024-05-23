@@ -106,7 +106,9 @@ export function baseStream(
     }
     
     function setZoom(zoom: number) {
-        handler.set(new Float32Array([zoom]), 28);
+        z = zoom,
+        m = Math.exp(-z);
+        handler.set(new Float32Array([z]), 28);
     }
 
 
