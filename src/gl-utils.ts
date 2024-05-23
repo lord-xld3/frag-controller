@@ -68,7 +68,14 @@ interface GLContext extends WebGL2RenderingContext {
     ) => UniformBlockHandler;
 
     /**
-     * Binds a baseStream to the canvas and uniform block.
+     * Binds touch inputs to a uniform block. Returns [BaseStreamHandler, UniformBlockHandler].
+     * @param canvas - The canvas element.
+     * @param program - The shader program.
+     * @param block - The name of the uniform block in the shader program.
+     * @param zoom - The zoom level. (Default: 1)
+     * @param binding - The binding point for the uniform block. (Default: 0)
+     * @param tap3 - The triple tap event handler. (Default: () => {})
+     * @returns [BaseStreamHandler, UniformBlockHandler]
      */
     bindTouch: (
         canvas: HTMLCanvasElement, 
@@ -76,6 +83,7 @@ interface GLContext extends WebGL2RenderingContext {
         block: string, 
         zoom?: number,
         binding?: number,
+        tap3?: (e: PointerEvent) => void,
     ) => [BaseStreamHandler, UniformBlockHandler];
 }
 
@@ -107,10 +115,17 @@ export interface BufferObject {
 }
 
 /**
- * Manages uniform data.
- * @extends BufferObject
+ * Manages a uniform block.
  */
-export interface UniformBlockHandler extends BufferObject {
+export interface UniformBlockHandler extends Pick<BufferObject, 'delete'> {
+    /**
+     * Binds the uniform block to the current program.
+     */
+    bind(): void;
+    /**
+     * Unbinds the uniform block from the current program.
+     */
+    unbind(): void;
     /**
      * Binds the uniform block to the specified binding point.
      * @param binding - The binding point for the uniform block.
@@ -265,7 +280,7 @@ export default function init(
         flush();
 
         return {
-            ...bufferObject,
+            delete: bufferObject.delete,
             bindBlock,
             bind,
             unbind,
@@ -280,9 +295,10 @@ export default function init(
         blockName: string,
         zoom: number = 1,
         binding: number = 0,
+        tap3: (e: PointerEvent) => void = () => {},
     ): [BaseStreamHandler, UniformBlockHandler] {
         const handler = gl.bindUniforms(program, blockName, binding);
-        return [baseStream(canvas, handler, zoom), handler];
+        return [baseStream(canvas, handler, zoom, tap3), handler];
     }
 
     return gl;

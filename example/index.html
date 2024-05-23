@@ -15,55 +15,7 @@
 <body>
     <canvas id="canvas"></canvas>
     <div id="panel">
-        <div class="control">
-            <label for="zoom">Zoom</label>
-            <input id="zoom" type="range" min="-1" max="12" step="1e-9" name="Zoom" value="-0.5">
-            <span class="tooltip" id="zoom-tooltip"></span>
-        </div>
-        <div class="control">
-            <label for="iterations">Iterations</label>
-            <input id="iterations" type="range" min="1" max="1000" step="1" name="Iterations" value="400">
-            <span class="tooltip" id="iterations-tooltip"></span>
-        </div>
-        <div class="control">
-            <label for="escape">Escape Radius</label>
-            <input id="escape-radius" type="range" min="1" max="10" step="1e-9" name="Escape" value="9">
-            <span class="tooltip" id="escape-tooltip"></span>
-        </div>
-        <div class="control">
-            <label for="palette">Palette</label>
-            <input id="palette" type="range" min="0" max="1" step="1e-9" name="Palette" value="0.5">
-            <span class="tooltip" id="palette-tooltip"></span>
-        </div>
+        <div class="overlay" id="overlay-info">Double-click or tap with 3 fingers to toggle panel.</div>
     </div>
-    <script>
-        function updateTooltip(rangeElement, tooltipElement) {
-            tooltipElement.textContent = rangeElement.value;
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const zoomRange = document.getElementById('zoom');
-            const iterationsRange = document.getElementById('iterations');
-            const escapeRange = document.getElementById('escape-radius');
-            const paletteRange = document.getElementById('palette');
-
-            const zoomTooltip = document.getElementById('zoom-tooltip');
-            const iterationsTooltip = document.getElementById('iterations-tooltip');
-            const paletteTooltip = document.getElementById('palette-tooltip');
-            const escapeTooltip = document.getElementById('escape-tooltip');
-
-            // Initial values
-            updateTooltip(zoomRange, zoomTooltip);
-            updateTooltip(iterationsRange, iterationsTooltip);
-            updateTooltip(escapeRange, escapeTooltip);
-            updateTooltip(paletteRange, paletteTooltip);
-            
-
-            zoomRange.addEventListener('input', () => updateTooltip(zoomRange, zoomTooltip));
-            iterationsRange.addEventListener('input', () => updateTooltip(iterationsRange, iterationsTooltip));
-            escapeRange.addEventListener('input', () => updateTooltip(escapeRange, escapeTooltip));
-            paletteRange.addEventListener('input', () => updateTooltip(paletteRange, paletteTooltip));
-        });
-    </script>
 </body>
 </html>

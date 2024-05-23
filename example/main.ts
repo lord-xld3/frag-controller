@@ -1,3 +1,4 @@
+import { newInputRange } from '../src/Controls';
 import init from '../src/gl-utils';
 
 const gl = init(document.getElementById('canvas') as HTMLCanvasElement);
@@ -48,35 +49,59 @@ void main() {
 
 const program = gl.useSSQ(frag);
 
-const [stream, base] = gl.bindTouch(canvas, program, 'I', 0.01, 0);
-stream.bind();
-stream.setDelta(-.75,0);
-base.flush();
-
-const uni = gl.bindUniforms(program, 'U', 1);
-uni.set(new Uint32Array([80, 300]));
-uni.set(new Float32Array([6, 1e3]), 8);
-uni.flush();
+const panel = document.getElementById('panel') as HTMLDivElement,
+    controlMinIter = newInputRange(panel, 'Min Iterations', 80, 1, 1, 400),
+    controlMaxIter = newInputRange(panel, 'Max Iterations', 400, 1, 80, 1e3),
+    controlEscapeMin = newInputRange(panel, 'Min Escape Radius', 6, 1e-9, 0, 10),
+    controlEscapeMax = newInputRange(panel, 'Max Escape Radius', 0.5e4, 1e-9, 6, 1e4)
 
 
-const panel = document.getElementById('panel') as HTMLDivElement;
-
-canvas.onclick = () => {
+const [stream, base] = gl.bindTouch(canvas, program, 'I', 0.01, 0, () => {
     panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-}
-
+});
+stream.bind();
+stream.setCoords(-.75,0);
+stream.setDelta(-.75,0);
+canvas.ondblclick = () => {
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+};
 window.onresize = function() { 
     gl.resize();
     stream.setResolution(canvas.width, canvas.height);
 };
-
 window.dispatchEvent(new Event('resize'));
+base.flush();
+
+const uni = gl.bindUniforms(program, 'U', 1);
+uni.set(new Uint32Array([80, 400]));
+uni.set(new Float32Array([6, 0.5e4]), 8);
+uni.flush();
+
+controlMinIter.addEventListener('input', () => {
+    controlMaxIter.min = controlMinIter.value;
+    uni.set(new Uint32Array([controlMinIter.valueAsNumber]), 0);
+});
+
+controlMaxIter.addEventListener('input', () => {
+    controlMinIter.max = controlMaxIter.value;
+    uni.set(new Uint32Array([controlMaxIter.valueAsNumber]), 4);
+});
+
+controlEscapeMin.addEventListener('input', () => {
+    controlEscapeMax.min = controlEscapeMin.value;
+    uni.set(new Float32Array([controlEscapeMin.valueAsNumber]), 8);
+});
+
+controlEscapeMax.addEventListener('input', () => {
+    uni.set(new Float32Array([controlEscapeMax.valueAsNumber]), 12);
+});
 
 gl.useProgram(program);
 gl.clearColor(0, 0, 0, 1);
 
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT);
+    uni.flush();
     base.flush();
     gl.drawSSQ();
     requestAnimationFrame(render);

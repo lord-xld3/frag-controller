@@ -64,11 +64,20 @@ export function touchStream(
  * @param canvas - Canvas element.
  * @param handler - Uniform block handler.
  * @param zoom - Zoom level. (Default: 1)
+ * @note Expected uniform block layout:
+ * ```
+ * uniform U {
+ *    uvec2 M, R;
+ *   vec2 D;
+ *  float T, Z;
+ * };```
+ * where names are user-defined.
  */
 export function baseStream(
     canvas: HTMLCanvasElement,
     handler: UniformBlockHandler,
     zoom: number,
+    tap3: (e: PointerEvent) => void,
 ): BaseStreamHandler {
     const H = 1/canvas.clientHeight;
     
@@ -83,8 +92,9 @@ export function baseStream(
         handler.set(new Uint32Array([x, y]), 0);
     }
 
-    function setDelta(dx: number, dy: number) {
-        handler.set(new Float32Array([dx, dy]), 16);
+    function setDelta(x: number, y: number) {
+        dx = x, dy = y;
+        handler.set(new Float32Array([x, y]), 16);
     }
 
     function setResolution(width: number, height: number) {
@@ -103,6 +113,7 @@ export function baseStream(
     function down(e: PointerEvent) {
         ec.push(e);
         if (ec.length === 1) canvas.setPointerCapture(e.pointerId);
+        if (ec.length === 3) tap3(e);
         setCoords(e.clientX, e.clientY);
     }
 
@@ -153,4 +164,49 @@ export function baseStream(
         setTime,
         setZoom,
     }
+}
+
+/**
+ * Creates a new input range element and returns it.
+ * @param parent - The parent element.
+ * @param label - The label text.
+ * @param value - The initial value. (Default: 0)
+ * @param step - The step value. (Default: 1)
+ * @param min - The minimum value. (Default: 0)
+ * @param max - The maximum value. (Default: 1)
+*/
+export function newInputRange(
+    parent: HTMLElement,
+    label: string,
+    value: number = 0,
+    step: number = 1,
+    min: number = 0,
+    max: number = 1,
+): HTMLInputElement {
+    const controlDiv = Object.assign(document.createElement('div'), { className: 'overlay' }),
+        labelElement = Object.assign(document.createElement('label'), { textContent: label }),
+        inputElement = Object.assign(document.createElement('input'), {
+            type: 'range',
+            id: label,
+            name: label,
+            step: step.toString(),
+            min: min.toString(),
+            max: max.toString(),
+            value: value.toString(),
+        }),
+        tooltipSpan = Object.assign(document.createElement('span'), { 
+            className: 'tooltip', 
+            id: `${label}-tooltip`,
+            textContent: value.toString()
+        });
+
+    labelElement.setAttribute('for', label);
+    inputElement.addEventListener('input', () => {
+        tooltipSpan.textContent = inputElement.value;
+    });
+
+    controlDiv.append(labelElement, inputElement, tooltipSpan);
+    parent.appendChild(controlDiv);
+
+    return inputElement;
 }
