@@ -1,9 +1,11 @@
-import { UniformBlockHandler } from "./gl-utils";
+import { UniformBlockHandler } from "./Fragger";
+
+const info = document.getElementById('overlay-info') as HTMLDivElement;
 
 /**
- * Controls a touchStream.
+ * Controls a bindPointer.
  */
-export interface StreamHandler {
+interface StreamHandler {
     /**
      * Binds the event handlers.
      */
@@ -15,27 +17,50 @@ export interface StreamHandler {
 }
 
 export interface BaseStreamHandler extends StreamHandler {
+    /**
+     * Sets the mouse coordinate uniform.
+     * @param x - The x-coordinate.
+     * @param y - The y-coordinate.
+     */
     setCoords: (x: number, y: number) => void,
-    setDelta: (dx: number, dy: number) => void,
+    /**
+     * Sets the resolution uniform.
+     * @param width - The width.
+     * @param height - The height.
+     */
     setResolution: (width: number, height: number) => void,
+    /**
+     * Sets the delta uniform.
+     * @param x - The x-delta.
+     * @param y - The y-delta.
+     */
+    setDelta: (x: number, y: number) => void,
+    /**
+     * Sets the time uniform.
+     * @param time - The time.
+     */
     setTime: (time: number) => void,
+    /**
+     * Sets the zoom uniform.
+     * @param zoom - The zoom level.
+     */
     setZoom: (zoom: number) => void,
 }
 
 /**
- * Binds touch events to a target element.
+ * Binds pointer events to a target element.
  * @param target - The target element.
  * @param down - The down event handler.
  * @param move - The move event handler.
  * @param up - The up event handler.
  * @param wheel - The wheel event handler.
  */
-export function touchStream(
+export function bindPointer(
     target: GlobalEventHandlers,
-    down: (e: PointerEvent) => void = () => {},
-    move: (e: PointerEvent) => void = () => {},
-    up: (e: PointerEvent) => void = () => {},
-    wheel: (e: WheelEvent) => void = () => {},
+    down: (e: PointerEvent) => void = ()=>{},
+    move: (e: PointerEvent) => void = ()=>{},
+    up: (e: PointerEvent) => void = ()=>{},
+    wheel: (e: WheelEvent) => void = ()=>{},
 ) : StreamHandler {
     return {
         bind: () => {
@@ -54,21 +79,13 @@ export function touchStream(
             target.onpointercancel = null;
             target.onpointerout = null;
             target.onpointerleave = null;
-            target.onwheel = null;
+            target.removeEventListener('wheel', wheel);
         }
     };
 }
 
-export function whenResized(
-    target: Element,
-    resize: (e: ResizeObserverEntry[]) => void,
-) {
-    const observer = new ResizeObserver(resize);
-    observer.observe(target);
-}
-
 /**
- * Streams canvas [iMouse.xy, iDelta.xy, iResolution.xy, iZoom.x] to a uniform block.
+ * Streams canvas [iMouse.xy, iResolution.xy, iDelta.xy, iZoom.x] to a uniform block.
  * @param canvas - Canvas element.
  * @param handler - Uniform block handler.
  * @param zoom - Zoom level. (Default: 1)
@@ -84,11 +101,11 @@ export function whenResized(
 export function baseStream(
     canvas: HTMLCanvasElement,
     handler: UniformBlockHandler,
-    zoom: number,
+    zoom: number = 1,
     tap3: (e: PointerEvent) => void,
 ): BaseStreamHandler {
     const H = 1/canvas.clientHeight;
-    
+
     let ec: PointerEvent[] = [],
         z = zoom, // default zoom level
         dx = 0, // delta x
@@ -100,13 +117,14 @@ export function baseStream(
         handler.set(new Uint32Array([x, y]), 0);
     }
 
+    function setResolution(width: number, height: number) {
+        handler.set(new Uint32Array([width, height]), 8);
+    }
+
+    
     function setDelta(x: number, y: number) {
         dx = x, dy = y;
         handler.set(new Float32Array([x, y]), 16);
-    }
-
-    function setResolution(width: number, height: number) {
-        handler.set(new Uint32Array([width, height]), 8);
     }
     
     function setTime(time: number) {
@@ -115,10 +133,9 @@ export function baseStream(
     
     function setZoom(zoom: number) {
         z = zoom,
-        m = Math.exp(-z);
-        handler.set(new Float32Array([z]), 28);
+        m = Math.exp(-zoom);
+        handler.set(new Float32Array([zoom]), 28);
     }
-
 
     function down(e: PointerEvent) {
         ec.push(e);
@@ -133,17 +150,15 @@ export function baseStream(
 
         if (ec.length === 1) { // Pan
             setCoords(e.clientX, e.clientY);
-            setDelta(dx -= e.movementX * H * m * 2, dy += e.movementY * H * m * 2);
+            setDelta(dx -= e.movementX * H * m * 2, dy += e.movementY * H * m * 2); 
+            // 2 is a magic number, feels right.
         }
 
+        // && e.isPrimary only fires on the primary pointer.
         if (ec.length === 2 && e.isPrimary) { // Pinch
             const [e1, e2] = ec;
             const diff = Math.hypot(e1.clientX - e2.clientX, e1.clientY - e2.clientY);
-            if (prevDiff) {
-                z += (diff - prevDiff) * H * 4,
-                m = Math.exp(-z);
-                setZoom(z);
-            }
+            if (prevDiff) setZoom(z += (diff - prevDiff) * H * 4);
             prevDiff = diff;
         }
     }
@@ -154,14 +169,10 @@ export function baseStream(
         canvas.releasePointerCapture(e.pointerId);
     }
 
-    function wheel(e: WheelEvent) {
-        z -= e.deltaY * H,
-        m = Math.exp(-z);
-        setZoom(z);
-    }
+    function wheel(e: WheelEvent) { setZoom(z -= e.deltaY * H) }
 
     return {
-        ...touchStream(
+        ...bindPointer(
             canvas,
             down,
             move,
@@ -169,11 +180,11 @@ export function baseStream(
             wheel,
         ),
         setCoords,
-        setDelta,
         setResolution,
+        setDelta,
         setTime,
         setZoom,
-    }
+    };
 }
 
 /**
@@ -192,8 +203,9 @@ export function newInputRange(
     step: number = 1,
     min: number = 0,
     max: number = 1,
+    classname: string = 'control',
 ): HTMLInputElement {
-    const controlDiv = Object.assign(document.createElement('div'), { className: 'overlay' }),
+    const controlDiv = Object.assign(document.createElement('div'), { className: classname }),
         labelElement = Object.assign(document.createElement('label'), { textContent: label }),
         inputElement = Object.assign(document.createElement('input'), {
             type: 'range',

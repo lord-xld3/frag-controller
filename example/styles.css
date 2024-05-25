@@ -13,8 +13,8 @@ canvas {
     width: 100%;
     height: 100%;
     display: block;
-    touch-action: none;
     cursor: all-scroll;
+    touch-action: none;
 }
 
 /* Panel styling */
@@ -59,7 +59,7 @@ canvas {
 }
 
 /* Overlay styling */
-.overlay {
+.control {
     height: 100%;
     color: white;
     position: relative;
@@ -76,7 +76,7 @@ canvas {
 }
 
 /* Overlay label styling */
-.overlay label {
+.control label {
     user-select: none;
     padding: 1% 0;
 }

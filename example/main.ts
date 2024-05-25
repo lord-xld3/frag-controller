@@ -1,15 +1,12 @@
-import { newInputRange, whenResized } from '../src/Controls';
-import init from '../src/gl-utils';
+import { newInputRange } from '../src/Controls';
+import init from '../src/Fragger';
+import resizeListener from '../src/TrueSize';
 
-// Initialize like normal. 
-// We can use OffscreenCanvas but it's mostly for web workers and Transform Feedback.
-// TODO: Extend stuff to support TFBOs and vertex shaders.
-// The uniform streaming is pretty good.
+// Slightly different initialization.
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
-const gl = init(canvas);
+const [gl, fragger] = init(canvas);
 
-
-const frag = `#version 300 es
+const shader = `#version 300 es
 precision highp float;
 precision highp int;
 
@@ -33,9 +30,15 @@ void main() {
 }`;
 
 // Create program using a screen-space quad vertex shader.
-const program = gl.useSSQ(frag);
+const program = fragger.useSSQ(shader);
 
-const dpr = window.devicePixelRatio;
+// Setup resize listener. This will resize the canvas to the "true size" in device pixels.
+// In this usage, we let the user update the dpr, so we don't get the dpr from the "true size".
+let dpr = window.devicePixelRatio;
+resizeListener([canvas], () => {
+    fragger.scaleToDevice(stream, dpr);
+}).observe();
+canvas.dispatchEvent(new Event('resize'));
 
 // Define control elements.
 const panel = document.getElementById('panel') as HTMLDivElement,
@@ -47,55 +50,24 @@ const panel = document.getElementById('panel') as HTMLDivElement,
     controlEscapeMax = newInputRange(panel, 'Max Escape Radius', 0.5e4, 1e-4, 6, 1e4),
     controlHue = newInputRange(panel, 'Hue', 0.6, 1e-4, 0, 1);
 
+// Double tap function.
+canvas.ondblclick = () => {
+    panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+};
 
-// Setup base touch stream.
-const [stream, base] = gl.bindTouch(canvas, program, 'I', 0.01, 0, () => {
+// Setup base uniform stream.
+const [stream, base] = fragger.bindTouch(program, 'I', 0.01, 0, () => {
     // Triple press function.
     panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
 });
 stream.bind();
 stream.setCoords(-.75,0);
 stream.setDelta(-.75,0);
-
-// Double tap function.
-canvas.ondblclick = () => {
-    panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
-};
-
-// Resize canvas function.
-whenResized(canvas, (e: ResizeObserverEntry[]) => {
-   for (const entry of e) {
-        let dpr, width, height;
-        if (entry.devicePixelContentBoxSize) {
-            width = entry.devicePixelContentBoxSize[0].inlineSize,
-            height = entry.devicePixelContentBoxSize[0].blockSize;
-            dpr = 1;
-        } else if (entry.contentBoxSize) {
-            width = entry.contentBoxSize[0].inlineSize;
-            height = entry.contentBoxSize[0].blockSize;
-            dpr = window.devicePixelRatio;
-        } else {
-            width = entry.contentRect.width,
-            height = entry.contentRect.height;
-            dpr = window.devicePixelRatio;
-        }
-        setResolution(width, height, dpr);
-        controlDPR.value = dpr.toString();
-    }
-});
-
-function setResolution(width: number, height: number, dpr: number) {
-    width = Math.round(width * dpr);
-    height = Math.round(height * dpr);
-    gl.resize(width, height);
-    stream.setResolution(width, height);
-}
-
-// Update base uniforms after resizing, setting coords, and delta.
+// Update base uniforms after setting coords and delta.
 base.update();
 
 // Setup custom uniform block.
-const uni = gl.bindUniforms(program, 'U', 1);
+const uni = fragger.bindUniformBlock(program, 'U', 1);
 uni.set(new Uint32Array([80, 400]));
 uni.set(new Float32Array([
         6, 0.5e4, // min escape, max escape
@@ -106,10 +78,10 @@ uni.set(new Float32Array([
 );
 uni.update();
 
-// Stream control elements to uniform block.
+// Stream control elements to custom uniform block.
 controlDPR.oninput = () => {
-    let dpr = controlDPR.valueAsNumber;
-    setResolution(canvas.clientWidth, canvas.clientHeight, dpr);
+    dpr = controlDPR.valueAsNumber;
+    fragger.scaleToDevice(stream, dpr);
 }
 
 controlZoom.oninput = () => {
@@ -170,7 +142,7 @@ function render() {
     base.update();
 
     // Draw a screen-space quad for the fragment shader.
-    gl.drawSSQ();
+    fragger.drawSSQ();
     requestAnimationFrame(render);
 }
 
