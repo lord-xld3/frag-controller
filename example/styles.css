@@ -5,6 +5,7 @@ body, html {
     overflow: hidden;
     width: 100%;
     height: 100%;
+    box-sizing: border-box;
 }
 
 /* Canvas styling */
@@ -13,6 +14,7 @@ canvas {
     height: 100%;
     display: block;
     touch-action: none;
+    cursor: all-scroll;
 }
 
 /* Panel styling */
@@ -29,7 +31,6 @@ canvas {
     justify-content: space-between;
     padding: 1.5%;
     overflow-y: auto;
-    box-sizing: border-box;
 }
 
 #fullscreen {
@@ -40,6 +41,13 @@ canvas {
     background-color: rgba(0, 0, 0, 0);
     display: block;
     border-style: none;
+}
+
+#debug {
+    color: red;
+    font-size: small;
+    text-overflow: clip;
+    white-space: pre-wrap;
 }
 
 #overlay-header {

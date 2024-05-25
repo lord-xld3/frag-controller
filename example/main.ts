@@ -1,12 +1,13 @@
-import { newInputRange } from '../src/Controls';
+import { newInputRange, whenResized } from '../src/Controls';
 import init from '../src/gl-utils';
 
 // Initialize like normal. 
 // We can use OffscreenCanvas but it's mostly for web workers and Transform Feedback.
 // TODO: Extend stuff to support TFBOs and vertex shaders.
 // The uniform streaming is pretty good.
-const gl = init(document.getElementById('canvas') as HTMLCanvasElement);
-const canvas = gl.canvas as HTMLCanvasElement;
+const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+const gl = init(canvas);
+
 
 const frag = `#version 300 es
 precision highp float;
@@ -34,9 +35,12 @@ void main() {
 // Create program using a screen-space quad vertex shader.
 const program = gl.useSSQ(frag);
 
+const dpr = window.devicePixelRatio;
+
 // Define control elements.
 const panel = document.getElementById('panel') as HTMLDivElement,
-    controlZoom = newInputRange(panel, 'Zoom', 0.01, 1e-4, 0.001, 12),
+    controlDPR = newInputRange(panel, 'Resolution scale', dpr, dpr/4, dpr/4, dpr*2),
+    controlZoom = newInputRange(panel, 'Zoom', 0.01, 1e-4, -1, 12),
     controlMinIter = newInputRange(panel, 'Min Iterations', 80, 1, 1, 400),
     controlMaxIter = newInputRange(panel, 'Max Iterations', 400, 1, 80, 1e3),
     controlEscapeMin = newInputRange(panel, 'Min Escape Radius', 6, 1e-4, 0, 10),
@@ -59,11 +63,33 @@ canvas.ondblclick = () => {
 };
 
 // Resize canvas function.
-window.onresize = function() { 
-    gl.resize();
-    stream.setResolution(canvas.width, canvas.height);
-};
-window.dispatchEvent(new Event('resize'));
+whenResized(canvas, (e: ResizeObserverEntry[]) => {
+   for (const entry of e) {
+        let dpr, width, height;
+        if (entry.devicePixelContentBoxSize) {
+            width = entry.devicePixelContentBoxSize[0].inlineSize,
+            height = entry.devicePixelContentBoxSize[0].blockSize;
+            dpr = 1;
+        } else if (entry.contentBoxSize) {
+            width = entry.contentBoxSize[0].inlineSize;
+            height = entry.contentBoxSize[0].blockSize;
+            dpr = window.devicePixelRatio;
+        } else {
+            width = entry.contentRect.width,
+            height = entry.contentRect.height;
+            dpr = window.devicePixelRatio;
+        }
+        setResolution(width, height, dpr);
+        controlDPR.value = dpr.toString();
+    }
+});
+
+function setResolution(width: number, height: number, dpr: number) {
+    width = Math.round(width * dpr);
+    height = Math.round(height * dpr);
+    gl.resize(width, height);
+    stream.setResolution(width, height);
+}
 
 // Update base uniforms after resizing, setting coords, and delta.
 base.update();
@@ -81,6 +107,11 @@ uni.set(new Float32Array([
 uni.update();
 
 // Stream control elements to uniform block.
+controlDPR.oninput = () => {
+    let dpr = controlDPR.valueAsNumber;
+    setResolution(canvas.clientWidth, canvas.clientHeight, dpr);
+}
+
 controlZoom.oninput = () => {
     stream.setZoom(controlZoom.valueAsNumber);
 };
@@ -118,8 +149,12 @@ const fullscreen = document.getElementById('fullscreen') as HTMLButtonElement;
 fullscreen.onclick = () => {
     if (document.fullscreenElement) {
         document.exitFullscreen();
-    } else {
-        canvas.requestFullscreen();
+        fullscreen.value = '🔳';
+    }
+    // Target root <html> element.
+    else {
+        document.documentElement.requestFullscreen();
+        fullscreen.value = '🔲';
     }
 };
 

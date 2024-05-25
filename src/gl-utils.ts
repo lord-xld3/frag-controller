@@ -196,16 +196,16 @@ export default function init(
             x: number = 0, 
             y: number = 0
         ) {
-            gl.canvas.width = width;
-            gl.canvas.height = height;
+            canvas.width = width;
+            canvas.height = height;
             gl.viewport(x, y, width, height);
         } 
     : function (
         width: number = canvas.width,
         height: number = canvas.height
     ) {
-        gl.canvas.width = width;
-        gl.canvas.height = height;
+        canvas.width = width;
+        canvas.height = height;
         gl.viewport(0, 0, width, height);
     },
 

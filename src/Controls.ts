@@ -59,6 +59,14 @@ export function touchStream(
     };
 }
 
+export function whenResized(
+    target: Element,
+    resize: (e: ResizeObserverEntry[]) => void,
+) {
+    const observer = new ResizeObserver(resize);
+    observer.observe(target);
+}
+
 /**
  * Streams canvas [iMouse.xy, iDelta.xy, iResolution.xy, iZoom.x] to a uniform block.
  * @param canvas - Canvas element.
