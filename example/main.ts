@@ -1,6 +1,5 @@
 import { pointerEvents, newInputRange } from '../src/Controls';
 import init from '../src/Fragger';
-import resizeListener from '../src/TrueSize';
 
 // Slightly different initialization.
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -66,10 +65,11 @@ stream.bind();
 stream.setCoords(-.75,0);
 stream.setDelta(-.75,0);
 
-// We could use (w, h, dpr) =>... but we're letting the user control the dpr.
-resizeListener([canvas], () => {
+// Resize listener.
+window.onresize = () => {
     stream.scaleToDevice(dpr);
-}).bind();
+};
+window.dispatchEvent(new Event('resize'));
 
 // Update base uniforms after setting coords, delta and resolution.
 base.update();
