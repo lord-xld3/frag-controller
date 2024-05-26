@@ -66,12 +66,12 @@ canvas {
 #overlay-info {
     user-select: none;
     height: min-content;
+    width: 100%;
 }
 
 #overlay-info ul {
-    list-style-type: none;
     padding: 0;
-    margin: 0;
+    margin: 0 0 0 20px;
 }
 
 /* Overlay label styling */
