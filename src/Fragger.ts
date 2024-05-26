@@ -1,4 +1,4 @@
-import { BaseStreamHandler, baseStream } from "./Controls";
+import { StreamHandler, pointerEvents } from "./Controls";
 
 export type TypedArray = 
 Int8Array | Uint8Array | 
@@ -6,6 +6,7 @@ Int16Array | Uint16Array |
 Int32Array | Uint32Array | 
 Float32Array // | Float64Array is not supported by WebGL2 with only 32-bit float support.
 
+//#region Interfaces
 /**
  * Utilities that reference the WebGL2 context.
  */
@@ -67,36 +68,18 @@ interface Fragger {
     ) => UniformBlockHandler;
 
     /**
-     * Binds touch inputs to a uniform block. Returns [BaseStreamHandler, UniformBlockHandler].
+     * Streams canvas [iMouse.xy, iResolution.xy, iDelta.xy, iZoom.x] to a uniform block.
      * @param program - The shader program.
-     * @param block - The name of the uniform block in the shader program.
-     * @param zoom - The zoom level. (Default: 1)
+     * @param blockName - The name of the uniform block in the shader program.
      * @param binding - The binding point for the uniform block. (Default: 0)
-     * @param tap3 - The triple tap event handler
-     * @returns [BaseStreamHandler, UniformBlockHandler]
+     * @param zoom - The zoom level. (Default: 1)
      */
-    bindTouch: (
-        program: WebGLProgram, 
-        block: string, 
-        zoom?: number,
+    baseStream: (
+        program: WebGLProgram,
+        blockName: string,
         binding?: number,
-        tap3?: (e: PointerEvent) => void,
-    ) => [BaseStreamHandler, UniformBlockHandler];
-
-    /**
-     * Scales the gl.canvas to the *actual* device resolution unless specified. Also updates resolution in 'baseStream'.
-     * - When using an OffscreenCanvas, the width and height must be explicitly set due to the lack of clientWidth and clientHeight.
-     * @param basestream - The stream handler.
-     * @param dpr - The device pixel ratio. (Default: window.devicePixelRatio)
-     * @param width - The width of the canvas. (Default: canvas.clientWidth)
-     * @param height - The height of the canvas. (Default: canvas.clientHeight)
-     */
-    scaleToDevice: (
-        baseStream: BaseStreamHandler,
-        dpr?: number,
-        width?: number,
-        height?: number,
-    ) => void;
+        zoom?: number,
+    ) => [UniformBlockHandler, BaseStreamHandler];
 }
 
 /**
@@ -159,6 +142,51 @@ export interface UniformBlockHandler extends Pick<BufferObject, 'delete'> {
     update(): void;
 }
 
+interface BaseStreamHandler extends StreamHandler {
+    /**
+     * Sets the mouse coordinate uniform.
+     * @param x - The x-coordinate.
+     * @param y - The y-coordinate.
+     */
+    setCoords: (x: number, y: number) => void,
+    /**
+     * Sets the resolution uniform.
+     * @param width - The width.
+     * @param height - The height.
+     */
+    setResolution: (width: number, height: number) => void,
+    /**
+     * Sets the delta uniform.
+     * @param x - The x-delta.
+     * @param y - The y-delta.
+     */
+    setDelta: (x: number, y: number) => void,
+    /**
+     * Sets the time uniform.
+     * @param time - The time.
+     */
+    setTime: (time: number) => void,
+    /**
+     * Sets the zoom uniform.
+     * @param zoom - The zoom level.
+     */
+    setZoom: (zoom: number) => void,
+
+    /**
+     * Scales the gl.canvas to the *actual* device resolution unless specified. Also updates resolution in 'baseStream'.
+     * - When using an OffscreenCanvas, the width and height must be explicitly set.
+     * @param dpr - The device pixel ratio. (Default: window.devicePixelRatio)
+     * @param width - The width of the canvas. (Default: canvas.clientWidth)
+     * @param height - The height of the canvas. (Default: canvas.clientHeight)
+     */
+    scaleToDevice: (
+        dpr?: number,
+        width?: number,
+        height?: number,
+    ) => void;
+}
+//#endregion
+
 /**
  * Sets up an extended WebGL2 context.
  * @param canvas - The canvas element.
@@ -198,8 +226,7 @@ export default function init(
         useSSQ,
         drawSSQ,
         bindUniformBlock,
-        bindTouch,
-        scaleToDevice,
+        baseStream,
     }];
     // End of init().
 
@@ -303,28 +330,90 @@ export default function init(
         };
     };
 
-    function bindTouch(
+    function baseStream(
         program: WebGLProgram,
         blockName: string,
-        zoom: number = 1,
         binding: number = 0,
-        tap3: (e: PointerEvent) => void = ()=>{},
-    ): [BaseStreamHandler, UniformBlockHandler] {
+        zoom: number = 1,
+    ): [UniformBlockHandler, BaseStreamHandler] {
         const handler = bindUniformBlock(program, blockName, binding);
-        return [baseStream((canvas as HTMLCanvasElement), handler, zoom, tap3), handler];
-    };
+        let H = 1/(canvas as HTMLCanvasElement).clientHeight,
+            ec: PointerEvent[] = [], // event cache
+            z = zoom, // default zoom level
+            dx = 0, // delta x
+            dy = 0, // delta y
+            m = Math.exp(-z), // exp(-zoom)
+            pd = 0; // previous distance between two pointers
 
-    function scaleToDevice(
-        stream: BaseStreamHandler,
-        dpr: number = window.devicePixelRatio, 
-        width: number = (canvas as HTMLElement).clientWidth, 
-        height: number = (canvas as HTMLElement).clientHeight, 
-    ): void {
-        // Rounding should be *close enough*. 
-        // CSS will stretch it anyway but it needs to be an integer.
-        width = Math.round(width * dpr);
-        height = Math.round(height * dpr);
-        resize(width, height); // Update the canvas/viewport.
-        stream.setResolution(width, height); // Update the uniform block holding the resolution.
-    };
+        function setCoords(x: number, y: number) { handler.set(new Uint32Array([x, y]), 0); }
+        function setResolution(width: number, height: number) { handler.set(new Uint32Array([width, height]), 8); }
+        function setDelta(x: number, y: number) {
+            dx = x, dy = y;
+            handler.set(new Float32Array([x, y]), 16);
+        }
+        function setTime(time: number) { handler.set(new Float32Array([time]), 24); }
+        function setZoom(zoom: number) {
+            z = zoom,
+            m = Math.exp(-zoom);
+            handler.set(new Float32Array([zoom]), 28);
+        }
+
+        return [
+            handler,
+            {
+                ...pointerEvents(
+                    (canvas as HTMLCanvasElement),
+                    // Down
+                    (e: PointerEvent) => {
+                        ec.push(e);
+                        if (ec.length === 1) (canvas as HTMLCanvasElement).setPointerCapture(e.pointerId);
+                        setCoords(e.clientX, e.clientY);
+                    },
+                    // Up
+                    (e: PointerEvent) => {
+                        ec = ec.filter(ev => ev.pointerId !== e.pointerId);
+                        if (ec.length < 2) pd = 0;
+                        (canvas as HTMLCanvasElement).releasePointerCapture(e.pointerId);
+                    },
+                    // Move
+                    (e: PointerEvent) => {
+                        let f = ec.findIndex(ev => ev.pointerId === e.pointerId);
+                        ec[f] = e;
+            
+                        if (ec.length === 1) { // Pan
+                            setCoords(e.clientX, e.clientY);
+                            setDelta(dx -= e.movementX * H * m * 2, dy += e.movementY * H * m * 2); 
+                            // 2 is a magic number, feels right.
+                        }
+            
+                        // && e.isPrimary only fires on the primary pointer.
+                        if (ec.length === 2 && e.isPrimary) { // Pinch
+                            const [e1, e2] = ec;
+                            const d = Math.hypot(e1.clientX - e2.clientX, e1.clientY - e2.clientY);
+                            if (pd) setZoom(z += (d - pd) * H * 4);
+                            pd = d;
+                        }
+                    },
+                    // Wheel
+                    (e: WheelEvent) => setZoom(z -= e.deltaY * H),
+                ),
+                setCoords,
+                setResolution,
+                setDelta,
+                setTime,
+                setZoom,
+                scaleToDevice: (
+                    dpr: number = window.devicePixelRatio, 
+                    width: number = (canvas as HTMLElement).clientWidth, 
+                    height: number = (canvas as HTMLElement).clientHeight, 
+                ) => {
+                    // CSS will stretch it anyway but it needs to be an integer.
+                    width = Math.round(width * dpr);
+                    height = Math.round(height * dpr);
+                    resize(width, height); // Update the canvas/viewport.
+                    setResolution(width, height); // Update the uniform block holding the resolution.
+                }, 
+            },
+        ];
+    }
 }

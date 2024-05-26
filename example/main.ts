@@ -1,4 +1,4 @@
-import { newInputRange } from '../src/Controls';
+import { pointerEvents, newInputRange } from '../src/Controls';
 import init from '../src/Fragger';
 import resizeListener from '../src/TrueSize';
 
@@ -32,13 +32,8 @@ void main() {
 // Create program using a screen-space quad vertex shader.
 const program = fragger.useSSQ(shader);
 
-// Setup resize listener. This will resize the canvas to the "true size" in device pixels.
-// In this usage, we let the user update the dpr, so we don't get the dpr from the "true size".
+// In this usage, we let the user update the devicePixelRatio, so we don't get the dpr from the "true size".
 let dpr = window.devicePixelRatio;
-resizeListener([canvas], () => {
-    fragger.scaleToDevice(stream, dpr);
-}).observe();
-canvas.dispatchEvent(new Event('resize'));
 
 // Define control elements.
 const panel = document.getElementById('panel') as HTMLDivElement,
@@ -51,19 +46,32 @@ const panel = document.getElementById('panel') as HTMLDivElement,
     controlHue = newInputRange(panel, 'Hue', 0.6, 1e-4, 0, 1);
 
 // Double tap function.
-canvas.ondblclick = () => {
+window.ondblclick = () => {
     panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
 };
 
+// Triple press event listener.
+let i = 0;
+pointerEvents(window, 
+    // Down.
+    () => { if (++i === 3) panel.style.display = panel.style.display === 'none' ? 'flex' : 'none'; },
+    // Up.
+    ()=>{ i = 0; },
+).bind();
+
 // Setup base uniform stream.
-const [stream, base] = fragger.bindTouch(program, 'I', 0.01, 0, () => {
-    // Triple press function.
-    panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
-});
+const [base, stream] = fragger.baseStream(program, 'I', 0, 0.01);
+
 stream.bind();
 stream.setCoords(-.75,0);
 stream.setDelta(-.75,0);
-// Update base uniforms after setting coords and delta.
+
+// We could use (w, h, dpr) =>... but we're letting the user control the dpr.
+resizeListener([canvas], () => {
+    stream.scaleToDevice(dpr);
+}).bind();
+
+// Update base uniforms after setting coords, delta and resolution.
 base.update();
 
 // Setup custom uniform block.
@@ -81,7 +89,7 @@ uni.update();
 // Stream control elements to custom uniform block.
 controlDPR.oninput = () => {
     dpr = controlDPR.valueAsNumber;
-    fragger.scaleToDevice(stream, dpr);
+    stream.scaleToDevice(dpr);
 }
 
 controlZoom.oninput = () => {

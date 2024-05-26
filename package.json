@@ -1,8 +1,8 @@
 {
-  "name": "shader-loader",
+  "name": "frag-controller",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A library for easy fragment shaders.",
+  "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "cd example && webpack --mode production",

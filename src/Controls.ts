@@ -1,11 +1,7 @@
-import { UniformBlockHandler } from "./Fragger";
-
-const info = document.getElementById('overlay-info') as HTMLDivElement;
-
 /**
- * Controls a bindPointer.
+ * Controls pointer events.
  */
-interface StreamHandler {
+export interface StreamHandler {
     /**
      * Binds the event handlers.
      */
@@ -16,37 +12,6 @@ interface StreamHandler {
     unbind: () => void,
 }
 
-export interface BaseStreamHandler extends StreamHandler {
-    /**
-     * Sets the mouse coordinate uniform.
-     * @param x - The x-coordinate.
-     * @param y - The y-coordinate.
-     */
-    setCoords: (x: number, y: number) => void,
-    /**
-     * Sets the resolution uniform.
-     * @param width - The width.
-     * @param height - The height.
-     */
-    setResolution: (width: number, height: number) => void,
-    /**
-     * Sets the delta uniform.
-     * @param x - The x-delta.
-     * @param y - The y-delta.
-     */
-    setDelta: (x: number, y: number) => void,
-    /**
-     * Sets the time uniform.
-     * @param time - The time.
-     */
-    setTime: (time: number) => void,
-    /**
-     * Sets the zoom uniform.
-     * @param zoom - The zoom level.
-     */
-    setZoom: (zoom: number) => void,
-}
-
 /**
  * Binds pointer events to a target element.
  * @param target - The target element.
@@ -55,135 +20,32 @@ export interface BaseStreamHandler extends StreamHandler {
  * @param up - The up event handler.
  * @param wheel - The wheel event handler.
  */
-export function bindPointer(
+export function pointerEvents(
     target: GlobalEventHandlers,
     down: (e: PointerEvent) => void = ()=>{},
-    move: (e: PointerEvent) => void = ()=>{},
     up: (e: PointerEvent) => void = ()=>{},
+    move: (e: PointerEvent) => void = ()=>{},
     wheel: (e: WheelEvent) => void = ()=>{},
 ) : StreamHandler {
     return {
         bind: () => {
-            target.onpointerdown = down;
-            target.onpointermove = move;
-            target.onpointerup = up;
-            target.onpointercancel = up;
-            target.onpointerout = up;
-            target.onpointerleave = up;
+            target.addEventListener('pointerdown', down);
+            target.addEventListener('pointermove', move);
+            target.addEventListener('pointerup', up);
+            target.addEventListener('pointercancel', up);
+            target.addEventListener('pointerout', up);
+            target.addEventListener('pointerleave', up);
             target.addEventListener('wheel', wheel, { passive: true });
         },
         unbind: () => {
-            target.onpointerdown = null;
-            target.onpointermove = null;
-            target.onpointerup = null;
-            target.onpointercancel = null;
-            target.onpointerout = null;
-            target.onpointerleave = null;
+            target.removeEventListener('pointerdown', down);
+            target.removeEventListener('pointermove', move);
+            target.removeEventListener('pointerup', up);
+            target.removeEventListener('pointercancel', up);
+            target.removeEventListener('pointerout', up);
+            target.removeEventListener('pointerleave', up);
             target.removeEventListener('wheel', wheel);
         }
-    };
-}
-
-/**
- * Streams canvas [iMouse.xy, iResolution.xy, iDelta.xy, iZoom.x] to a uniform block.
- * @param canvas - Canvas element.
- * @param handler - Uniform block handler.
- * @param zoom - Zoom level. (Default: 1)
- * @note Expected uniform block layout:
- * ```
- * uniform U {
- *    uvec2 M, R;
- *   vec2 D;
- *  float T, Z;
- * };```
- * where names are user-defined.
- */
-export function baseStream(
-    canvas: HTMLCanvasElement,
-    handler: UniformBlockHandler,
-    zoom: number = 1,
-    tap3: (e: PointerEvent) => void,
-): BaseStreamHandler {
-    const H = 1/canvas.clientHeight;
-
-    let ec: PointerEvent[] = [],
-        z = zoom, // default zoom level
-        dx = 0, // delta x
-        dy = 0, // delta y
-        m = Math.exp(-z), // exp(-zoom)
-        prevDiff = 0; // previous distance between two pointers
-
-    function setCoords(x: number, y: number) {
-        handler.set(new Uint32Array([x, y]), 0);
-    }
-
-    function setResolution(width: number, height: number) {
-        handler.set(new Uint32Array([width, height]), 8);
-    }
-
-    
-    function setDelta(x: number, y: number) {
-        dx = x, dy = y;
-        handler.set(new Float32Array([x, y]), 16);
-    }
-    
-    function setTime(time: number) {
-        handler.set(new Float32Array([time]), 24);
-    }
-    
-    function setZoom(zoom: number) {
-        z = zoom,
-        m = Math.exp(-zoom);
-        handler.set(new Float32Array([zoom]), 28);
-    }
-
-    function down(e: PointerEvent) {
-        ec.push(e);
-        if (ec.length === 1) canvas.setPointerCapture(e.pointerId);
-        if (ec.length === 3) tap3(e);
-        setCoords(e.clientX, e.clientY);
-    }
-
-    function move(e: PointerEvent) {
-        let f = ec.findIndex(ev => ev.pointerId === e.pointerId);
-        ec[f] = e;
-
-        if (ec.length === 1) { // Pan
-            setCoords(e.clientX, e.clientY);
-            setDelta(dx -= e.movementX * H * m * 2, dy += e.movementY * H * m * 2); 
-            // 2 is a magic number, feels right.
-        }
-
-        // && e.isPrimary only fires on the primary pointer.
-        if (ec.length === 2 && e.isPrimary) { // Pinch
-            const [e1, e2] = ec;
-            const diff = Math.hypot(e1.clientX - e2.clientX, e1.clientY - e2.clientY);
-            if (prevDiff) setZoom(z += (diff - prevDiff) * H * 4);
-            prevDiff = diff;
-        }
-    }
-    
-    function up(e: PointerEvent) {
-        ec = ec.filter(ev => ev.pointerId !== e.pointerId);
-        if (ec.length < 2) prevDiff = 0;
-        canvas.releasePointerCapture(e.pointerId);
-    }
-
-    function wheel(e: WheelEvent) { setZoom(z -= e.deltaY * H) }
-
-    return {
-        ...bindPointer(
-            canvas,
-            down,
-            move,
-            up,
-            wheel,
-        ),
-        setCoords,
-        setResolution,
-        setDelta,
-        setTime,
-        setZoom,
     };
 }
 

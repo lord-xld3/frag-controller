@@ -6,10 +6,7 @@ function trueSize(
     callback: (width: number, height: number, dpr: number) => void,
 ): void {
     for (const e of entry) {
-        const [width, height, dpr] = e.devicePixelContentBoxSize ? 
-            [e.devicePixelContentBoxSize[0].inlineSize, e.devicePixelContentBoxSize[0].blockSize, 1]
-        : [e.contentBoxSize[0].inlineSize, e.contentBoxSize[0].blockSize, window.devicePixelRatio];
-        callback(width, height, dpr);
+        callback(e.contentBoxSize[0].inlineSize, e.contentBoxSize[0].blockSize, window.devicePixelRatio);
     }
 };
 
@@ -27,11 +24,11 @@ export default function resizeListener(
         /**
          * Disconnects the ResizeObserver.
          */
-        unobserve: () => { o.disconnect(); },
+        unbind: () => { o.disconnect(); },
         /**
          * Observes the targets.
          */
-        observe: () => {
+        bind: () => {
             for (let i=0; i<targets.length; i++) { o.observe(targets[i]); };
         },
     };
