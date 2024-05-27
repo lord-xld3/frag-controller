@@ -73,6 +73,9 @@ interface Fragger {
      * @param blockName - The name of the uniform block in the shader program.
      * @param binding - The binding point for the uniform block. (Default: 0)
      * @param zoom - The zoom level. (Default: 1)
+     * @note - The uniform block should be defined as follows:
+     * ```uniform I { uvec2 M, R; vec2 D; float T, Z; }; ```
+     * where names are user defined.
      */
     baseStream: (
         program: WebGLProgram,
@@ -337,14 +340,13 @@ export default function init(
         zoom: number = 1,
     ): [UniformBlockHandler, BaseStreamHandler] {
         const handler = bindUniformBlock(program, blockName, binding);
-        let H = 1/(canvas as HTMLCanvasElement).clientHeight,
+        let H = 2/(canvas as HTMLCanvasElement).clientHeight * window.devicePixelRatio,
             ec: PointerEvent[] = [], // event cache
             z = zoom, // default zoom level
             dx = 0, // delta x
             dy = 0, // delta y
             m = Math.exp(-z), // exp(-zoom)
             pd = 0; // previous distance between two pointers
-
         function setCoords(x: number, y: number) { handler.set(new Uint32Array([x, y]), 0); }
         function setResolution(width: number, height: number) { handler.set(new Uint32Array([width, height]), 8); }
         function setDelta(x: number, y: number) {
@@ -353,8 +355,7 @@ export default function init(
         }
         function setTime(time: number) { handler.set(new Float32Array([time]), 24); }
         function setZoom(zoom: number) {
-            z = zoom,
-            m = Math.exp(-zoom);
+            z = zoom, m = Math.exp(-zoom);
             handler.set(new Float32Array([zoom]), 28);
         }
 
@@ -363,39 +364,45 @@ export default function init(
             {
                 ...pointerEvents(
                     (canvas as HTMLCanvasElement),
-                    // Down
-                    (e: PointerEvent) => {
-                        ec.push(e);
-                        if (ec.length === 1) (canvas as HTMLCanvasElement).setPointerCapture(e.pointerId);
-                        setCoords(e.clientX, e.clientY);
-                    },
-                    // Up
-                    (e: PointerEvent) => {
-                        ec = ec.filter(ev => ev.pointerId !== e.pointerId);
-                        if (ec.length < 2) pd = 0;
-                        (canvas as HTMLCanvasElement).releasePointerCapture(e.pointerId);
-                    },
-                    // Move
-                    (e: PointerEvent) => {
-                        let f = ec.findIndex(ev => ev.pointerId === e.pointerId);
-                        ec[f] = e;
-            
-                        if (ec.length === 1) { // Pan
+                    {
+                        down: (e: PointerEvent) => {
+                            ec.push(e);
+                            if (ec.length === 1) (canvas as HTMLCanvasElement).setPointerCapture(e.pointerId);
                             setCoords(e.clientX, e.clientY);
-                            setDelta(dx -= e.movementX * H * m * 2, dy += e.movementY * H * m * 2); 
-                            // 2 is a magic number, feels right.
+                        },
+                        up: (e: PointerEvent) => {
+                            ec = ec.filter(ev => ev.pointerId !== e.pointerId);
+                            if (ec.length < 2) pd = 0;
+                            (canvas as HTMLCanvasElement).releasePointerCapture(e.pointerId);
+                        },
+                        move: (e: PointerEvent) => {
+                            let f = ec.findIndex(ev => ev.pointerId === e.pointerId);
+                            ec[f] = e;
+        
+                            if (ec.length === 1) { // Pan
+                                setCoords(e.clientX, e.clientY);
+                                setDelta(
+                                    dx -= e.movementX * H * m, 
+                                    dy += e.movementY * H * m
+                                );
+                            }
+        
+                            // && e.isPrimary only fires on the primary pointer.
+                            if (ec.length === 2 && e.isPrimary) { // Pinch
+                                const [e1, e2] = ec;
+                                const d = Math.hypot(
+                                    e1.clientX - e2.clientX, 
+                                    e1.clientY - e2.clientY
+                                );
+                                if (pd) setZoom(z += (d - pd) * H);
+                                pd = d;
+                            }
+                        },
+                        wheel: (e: WheelEvent) => {
+                            e.preventDefault();
+                            setZoom(z -= e.deltaY * H)
                         }
-            
-                        // && e.isPrimary only fires on the primary pointer.
-                        if (ec.length === 2 && e.isPrimary) { // Pinch
-                            const [e1, e2] = ec;
-                            const d = Math.hypot(e1.clientX - e2.clientX, e1.clientY - e2.clientY);
-                            if (pd) setZoom(z += (d - pd) * H * 4);
-                            pd = d;
-                        }
-                    },
-                    // Wheel
-                    (e: WheelEvent) => setZoom(z -= e.deltaY * H),
+                    }
                 ),
                 setCoords,
                 setResolution,
@@ -407,9 +414,10 @@ export default function init(
                     width: number = (canvas as HTMLElement).clientWidth, 
                     height: number = (canvas as HTMLElement).clientHeight, 
                 ) => {
-                    // CSS will stretch it anyway but it needs to be an integer.
-                    width = Math.round(width * dpr);
-                    height = Math.round(height * dpr);
+                    // We should use a ResizeObserver but it looks ugly when resizing.
+                    width = Math.round(width * dpr),
+                    height = Math.round(height * dpr),
+                    H = 2/height * dpr;
                     resize(width, height); // Update the canvas/viewport.
                     setResolution(width, height); // Update the uniform block holding the resolution.
                 }, 

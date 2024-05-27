@@ -11,7 +11,7 @@ module.exports = {
     entry: {
         main: [
             './main.ts', 
-            './styles.css', 
+            './styles.css',
         ],
     },
     output: {
@@ -25,7 +25,7 @@ module.exports = {
                 use: [MiniCssExtractPlugin.loader, 'css-loader'],
             },
             {
-                test: /\.(png|svg|jpg|gif|webp|frag|vert)$/,
+                test: /\.(png|svg|jpg|gif|webp|frag|vert|sh)$/,
                 use: {
                     loader: 'file-loader',
                     options: {

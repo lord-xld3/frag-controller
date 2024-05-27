@@ -15,36 +15,38 @@ export interface StreamHandler {
 /**
  * Binds pointer events to a target element.
  * @param target - The target element.
- * @param down - The down event handler.
- * @param move - The move event handler.
- * @param up - The up event handler.
- * @param wheel - The wheel event handler.
+ * @param funcs - The functions to call on pointer events.
  */
 export function pointerEvents(
     target: GlobalEventHandlers,
-    down: (e: PointerEvent) => void = ()=>{},
-    up: (e: PointerEvent) => void = ()=>{},
-    move: (e: PointerEvent) => void = ()=>{},
-    wheel: (e: WheelEvent) => void = ()=>{},
+    funcs: {
+        down?: (e: PointerEvent) => void,
+        up?: (e: PointerEvent) => void,
+        move?: (e: PointerEvent) => void,
+        wheel?: (e: WheelEvent) => void,
+    }
 ) : StreamHandler {
     return {
-        bind: () => {
-            target.addEventListener('pointerdown', down);
-            target.addEventListener('pointermove', move);
-            target.addEventListener('pointerup', up);
-            target.addEventListener('pointercancel', up);
-            target.addEventListener('pointerout', up);
-            target.addEventListener('pointerleave', up);
-            target.addEventListener('wheel', wheel, { passive: true });
-        },
+        bind:()=>{
+            if (funcs.down) target.addEventListener('pointerdown',funcs.down);
+            if (funcs.move) target.addEventListener('pointermove',funcs.move);
+            if (funcs.up) {
+                target.addEventListener('pointerup',funcs.up);
+                target.addEventListener('pointercancel',funcs.up);
+                target.addEventListener('pointerout',funcs.up);
+                target.addEventListener('pointerleave',funcs.up);
+            }
+            if (funcs.wheel) target.addEventListener('wheel',funcs.wheel,{passive:false});},
         unbind: () => {
-            target.removeEventListener('pointerdown', down);
-            target.removeEventListener('pointermove', move);
-            target.removeEventListener('pointerup', up);
-            target.removeEventListener('pointercancel', up);
-            target.removeEventListener('pointerout', up);
-            target.removeEventListener('pointerleave', up);
-            target.removeEventListener('wheel', wheel);
+            if (funcs.down) target.removeEventListener('pointerdown',funcs.down);
+            if (funcs.move) target.removeEventListener('pointermove',funcs.move);
+            if (funcs.up) {
+                target.removeEventListener('pointerup',funcs.up);
+                target.removeEventListener('pointercancel',funcs.up);
+                target.removeEventListener('pointerout',funcs.up);
+                target.removeEventListener('pointerleave',funcs.up);
+            }
+            if (funcs.wheel) target.removeEventListener('wheel',funcs.wheel);
         }
     };
 }
