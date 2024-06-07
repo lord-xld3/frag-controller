@@ -14,8 +14,8 @@ export default function main(){
     out vec4 o;
 
     void main() {
-        vec2 uv = f / iResolution;
-        vec2 center = uv - 0.5;
+        vec2 uv = f * iResolution - 1.0;
+        vec2 center = uv * 0.5;
         float dist = length(center);
         float angle = atan(center.y, center.x);
         float wave = sin(iTime + dist * 10.0 + angle * 5.0);
@@ -37,10 +37,10 @@ export default function main(){
 
     // Resize listener.
     window.onresize = () => {
-        canvas.width = canvas.clientWidth;
-        canvas.height = canvas.clientHeight;
+        canvas.width = canvas.clientWidth * window.devicePixelRatio;
+        canvas.height = canvas.clientHeight * window.devicePixelRatio;
         gl.viewport(0, 0, canvas.width, canvas.height);
-        gl.bufferSubData(gl.UNIFORM_BUFFER, 0, new Float32Array([canvas.width, canvas.height]));
+        gl.bufferSubData(gl.UNIFORM_BUFFER, 0, new Float32Array(gluu.scaleToDevice()));
         requestAnimationFrame(render);
     };
     window.dispatchEvent(new Event('resize'));
