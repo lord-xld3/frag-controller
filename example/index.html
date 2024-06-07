@@ -2,15 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" description= "portfolio site" content="width=device-width, initial-scale=1.0">
     <title>Mandelbrot Explorer</title>
 </head>
 <body>
+    <canvas id="background"></canvas>
     <h1>Projects</h1>
+    
     <div class="canvascontainer">
         <p class="canvascaption">Mandelbrot set explorer</p>
         <div class="canvasbox" id="mandelbrot">
-            <canvas id="canvas"></canvas>
+            <canvas id="mandelbrot-canvas"></canvas>
             <div id="panel">
                 <section id="overlay-header">
                     <div class="control" id="overlay-info">
@@ -24,6 +26,13 @@
                     <span class="tooltip" id="fullscreen-tooltip">Fullscreen</span>
                 </section> 
             </div>
+        </div>
+    </div>
+
+    <div class="canvascontainer">
+        <p class="canvascaption">Mini-canvas</p>
+        <div class="canvasbox" id="minicanvas">
+            <canvas id="mini-canvas"></canvas>
         </div>
     </div>
 </body>

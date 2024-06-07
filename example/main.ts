@@ -1,3 +1,3 @@
-import main from "./mandelbrot";
+import main from "./background";
 
 main();

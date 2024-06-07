@@ -45,6 +45,10 @@ canvas {
     cursor: all-scroll;
 }
 
+#background {
+    position: fixed;
+}
+
 /* Panel styling */
 #panel {
     background-color: rgba(0, 0, 0, 0.75);
