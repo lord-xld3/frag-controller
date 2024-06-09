@@ -1,5 +1,4 @@
 import * as gluu from '../index';
-
 export default function main(){
     const canvas = document.getElementById('background') as HTMLCanvasElement;
     const gl = gluu.init(canvas);
@@ -28,19 +27,16 @@ export default function main(){
         o = vec4(color, 1.0);
     }`;
     const [program, draw] = gluu.useSSQ(frag);
+    gluu.clearShaderCache();
 
-    gl.uniformBlockBinding(program, gl.getUniformBlockIndex(program, 'I'), 0);
-    const ubo = gluu.newBufferObject(gl.UNIFORM_BUFFER, gl.STATIC_DRAW);
-    gl.bindBuffer(gl.UNIFORM_BUFFER, ubo.buf);
-    gl.bufferData(gl.UNIFORM_BUFFER, new Float32Array([canvas.width, canvas.height, 0]), gl.STATIC_DRAW);
-    gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, ubo.buf);
+    const [maxSize] = gluu.getUniformBlocks([[program, ['I']]]);
+    const uniformBuffer = gluu.newUniformBuffer(maxSize, new Float32Array([...gluu.scaleToDevice(), 0]));
 
     // Resize listener.
     window.onresize = () => {
-        canvas.width = canvas.clientWidth * window.devicePixelRatio;
-        canvas.height = canvas.clientHeight * window.devicePixelRatio;
-        gl.viewport(0, 0, canvas.width, canvas.height);
-        gl.bufferSubData(gl.UNIFORM_BUFFER, 0, new Float32Array(gluu.scaleToDevice()));
+        gluu.resizeViewportToCanvas();
+        // Usually we would use uniformBuffer.bind(), but its the only buffer bound to UNIFORM_BUFFER.
+        uniformBuffer.setSubBuffer(new Float32Array(gluu.scaleToDevice()));
         requestAnimationFrame(render);
     };
     window.dispatchEvent(new Event('resize'));
@@ -51,7 +47,11 @@ export default function main(){
 
     function render(T: number) {
         gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.bufferSubData(gl.UNIFORM_BUFFER, 8, new Float32Array([T * 1e-3]));
+        
+        // Usually we would use uniformBuffer.bind(), but its the only buffer bound to UNIFORM_BUFFER.
+        // We could also use .set() and .update(), but we don't need to update the whole buffer.
+
+        uniformBuffer.setSubBuffer(new Float32Array([T * 1e-3]), 8); // Offset 8 bytes to iTime.
 
         draw();
         requestAnimationFrame(render);

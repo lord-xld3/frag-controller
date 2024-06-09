@@ -1,6 +1,15 @@
 import { _gl } from "./Context";
 import { TypedArray } from "./Types";
 
+export interface BufferObject {
+    buf: WebGLBuffer;
+    bind: () => void;
+    unbind: () => void;
+    delete: () => void;
+    setBuffer: (data: ArrayBuffer | ArrayBufferView) => void;
+    setSubBuffer: (data: TypedArray, dstByteOffset?: number, srcOffset?: number, length?: number) => void;
+}
+
 export function newBufferObject(target: number, usage: number) {
     const buf = _gl.createBuffer()!;
     if (!buf) console.warn(`Failed to create BufferObject.`);

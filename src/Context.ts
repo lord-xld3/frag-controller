@@ -38,3 +38,14 @@ export function scaleToDevice(
         2/(height?? c.clientHeight * dpr)
     ];
 };
+
+export function resizeViewportToCanvas(
+    width: number = (_gl.canvas as HTMLCanvasElement).clientWidth * window.devicePixelRatio,
+    height: number = (_gl.canvas as HTMLCanvasElement).clientHeight * window.devicePixelRatio,
+    x: number = 0,
+    y: number = 0, 
+) {
+    _gl.canvas.width = width;
+    _gl.canvas.height = height;
+    _gl.viewport(x, y, width, height);
+}
