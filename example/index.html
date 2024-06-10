@@ -6,7 +6,13 @@
     <title>Mandelbrot Explorer</title>
 </head>
 <body>
-    <canvas id="background"></canvas>
+    <div id="bg-container">
+        <canvas id="background"></canvas>
+        <div class="fullscreen-container">
+            <span class="tooltip fullscreen-tooltip" id="bg-fullscreen-tooltip">Fullscreen</span>
+            <input class="fullscreen-button" id="bg-fullscreen" type ="button" value="🔳">
+        </div>
+    </div>
     <h1>Projects</h1>
     
     <div class="canvascontainer">
@@ -22,18 +28,20 @@
                             <li>Double-click / tap with 3 fingers to toggle panel</li>
                         </ul>
                     </div>
-                    <input id="fullscreen" type ="button" value="🔳">
-                    <span class="tooltip" id="fullscreen-tooltip">Fullscreen</span>
+                    <div class="fullscreen-container">
+                        <span class="tooltip fullscreen-tooltip" id="mb-fullscreen-tooltip">Fullscreen</span>
+                        <input class="fullscreen-button" id="mb-fullscreen" type ="button" value="🔳">
+                    </div>
                 </section> 
             </div>
         </div>
     </div>
 
-    <div class="canvascontainer">
+    <!-- <div class="canvascontainer">
         <p class="canvascaption">Mini-canvas</p>
         <div class="canvasbox" id="minicanvas">
             <canvas id="mini-canvas"></canvas>
         </div>
-    </div>
+    </div> -->
 </body>
 </html>

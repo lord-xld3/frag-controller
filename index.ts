@@ -1,19 +1,20 @@
-import init, { scaleToDevice, resizeViewportToCanvas } from './src/Context';
+import init from './src/Context';
 import { pointerEvents, newInputRange } from './src/Controls';
 import { newBufferObject } from './src/BufferObject';
-import { newProgram, useSSQ, clearShaderCache } from './src/Program';
-import { getUniformBlocks, newUniformBuffer } from './src/UniformBlockHandler';
+import { shaderCache, newProgram, useSSQ } from './src/Program';
+import { getUniformBlock, getUniformBlocks, newUniformBuffer } from './src/UniformBlockHandler';
+import { mapAttributes } from './src/Attributes';
 
 export {
-    init,
-    scaleToDevice,
-    resizeViewportToCanvas,
-    pointerEvents,
-    newInputRange,
-    newBufferObject,
-    newProgram,
-    useSSQ,
-    clearShaderCache,
+    shaderCache,
+    getUniformBlock,
     getUniformBlocks,
+    init,
+    mapAttributes,
+    newBufferObject,
+    newInputRange,
+    newProgram,
     newUniformBuffer,
+    pointerEvents,
+    useSSQ,
 };

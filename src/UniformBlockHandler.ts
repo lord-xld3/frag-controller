@@ -1,51 +1,43 @@
-import { _gl } from "./Context";
 import { TypedArray } from "./Types";
-import { newBufferObject } from "./BufferObject";
+import { newBufferObject, BufferObject } from "./BufferObject";
 
-export interface UniformBufferObject {
-    /**
-     * The WebGL buffer.
-     */
-    buf: WebGLBuffer;
-    /**
-     * Binds the buffer to the UNIFORM_BUFFER target.
-     */
-    bind: () => void;
-    /**
-     * Binds the uniform buffer to a binding point.
-     * @param binding - The binding point.
-     * @note This does not bind the buffer to the UNIFORM_BUFFER target.
-     * @note This does not bind uniform blocks to the binding point.
-     */
-    bindUniformBuffer: (binding?: number) => void;
-    /**
-     * Deletes the WebGL buffer.
-     */
-    delete: () => void;
-    /**
-     * Sets the CPU buffer data.
-     * @param data - The data to set.
-     * @param dstByteOffset - The byte offset to start writing to.
-     * @param srcOffset - The index offset to start reading from.
-     * @param length - The number of elements to read.
-     */
-    set: (data: TypedArray, dstByteOffset?: number, srcOffset?: number, length?: number) => void;
-    /**
-     * Sets data directly on the WebGL buffer.
-     * @param data - The data to set.
-     * @param dstByteOffset - The byte offset to start writing to.
-     * @param srcOffset - The index offset to start reading from.
-     * @param length - The number of elements to read.
-     */
-    setSubBuffer: (data: TypedArray, dstByteOffset?: number, srcOffset?: number, length?: number) => void;
-    /**
-     * Unbinds the buffer from the UNIFORM_BUFFER target.
-     */
-    unbind: () => void;
-    /**
-     * Copies the entire CPU buffer to the WebGL buffer.
-     */
-    update: () => void;
+export interface UniformBufferObject extends BufferObject {
+    bindBuffer: (binding?: number) => void;
+}
+
+type MaxSize = number;
+type BindBlockFunction = (binding?: number) => void;
+
+/**
+ * Returns the size of a uniform block and a function to bind it to a binding point. Also binds on call.
+ * @param gl - The WebGL2RenderingContext.
+ * @param program - The WebGLProgram.
+ * @param blockName - The name of the uniform block.
+ * @param binding - The binding point to bind the uniform block to. (Default: 0)
+ * @note We need the size of the uniform block to create a buffer that can hold the block.
+ * @example const [size, bindBlock] = getUniformBlock(gl, program, 'BlockName');
+ */
+export function getUniformBlock(
+    gl: WebGL2RenderingContext,
+    program: WebGLProgram,
+    blockName: string,
+    binding: number = 0,
+): [number, BindBlockFunction] {
+    const blockIndex = gl.getUniformBlockIndex(program, blockName);
+    if (blockIndex === -1) {
+        console.warn(`Uniform block ${blockName} not found in program.`);
+    }
+
+    function bindBlock(binding: number = 0) {
+        gl.uniformBlockBinding(program, blockIndex, binding);
+    }
+
+    bindBlock(binding);
+
+    return [
+        gl.getActiveUniformBlockParameter(program, blockIndex, gl.UNIFORM_BLOCK_DATA_SIZE),
+        bindBlock,
+    ]
 }
 
 /**
@@ -55,11 +47,18 @@ export interface UniformBufferObject {
  * @note The purpose of this function is to allow binding multiple uniform blocks to the same binding point.
  * The blocks can have different sizes, extra data is ignored in the shader program.
  * We need the max size to create buffer(s) that can hold all the blocks.
+ * @example const [maxSize, bindUniformBlocks] = getUniformBlocks(
+ * gl, 
+ * [
+ * [program1, ['BlockName1', 'BlockName2']], 
+ * [program2, ['BlockName3']]
+ * ]);
  */
 export function getUniformBlocks(
+    gl: WebGL2RenderingContext,
     blocks: [WebGLProgram, string[]][],
     binding: number = 0,
-): [number, (binding?: number) => void] {
+): [MaxSize, BindBlockFunction] {
     let maxSize = 0,
         blockInfo:[WebGLProgram, number[]][] = [];
 
@@ -68,12 +67,12 @@ export function getUniformBlocks(
             blockProgram = block[0],
             indices: number[] = [];
         for (let j = 0; j < block[1].length; j++) {
-            const blockIndex = _gl.getUniformBlockIndex(blockProgram, block[1][j]);
+            const blockIndex = gl.getUniformBlockIndex(blockProgram, block[1][j]);
             if (blockIndex === -1) {
                 console.warn(`Uniform block ${block[1][j]} not found in program.`);
                 continue;
             }
-            maxSize = Math.max(maxSize, _gl.getActiveUniformBlockParameter(blockProgram, blockIndex, _gl.UNIFORM_BLOCK_DATA_SIZE));
+            maxSize = Math.max(maxSize, gl.getActiveUniformBlockParameter(blockProgram, blockIndex, gl.UNIFORM_BLOCK_DATA_SIZE));
             indices.push(blockIndex);
         }
         blockInfo.push([
@@ -88,7 +87,7 @@ export function getUniformBlocks(
                 blockProgram = block[0],
                 indices = block[1];
             for (let j = 0; j < indices.length; j++) {
-                _gl.uniformBlockBinding(blockProgram, indices[j], binding);
+                gl.uniformBlockBinding(blockProgram, indices[j], binding);
             }
         }
     }
@@ -99,47 +98,30 @@ export function getUniformBlocks(
 
 /**
  * Creates, binds, and initializes a new uniform buffer object.
- * @param maxSize - The max size of the buffer which should be retrieved from getUniformBlocks().
- * @param data - Data to initialize the buffer with.
+ * @param maxSize - The max size of the buffer which should be retrieved from getUniformBlock().
  * @param binding - The binding point to bind the uniform buffer to. (Default: 0)
+ * @param data - Data to initialize the buffer with.
+ * @example const buffer = newUniformBuffer(gl, maxSize, new Uint32Array([1, 2, 3, 4]), 0);
  */
-export function newUniformBuffer(maxSize: number, data: TypedArray, binding: number = 0): UniformBufferObject {
-    const _buffer = new ArrayBuffer(maxSize),
-        bufferObject = newBufferObject(_gl.UNIFORM_BUFFER, _gl.STATIC_DRAW);
+export function newUniformBuffer(
+    gl: WebGL2RenderingContext,
+    maxSize: number, 
+    binding: number = 0,
+    data?: TypedArray, 
+): UniformBufferObject {
+    const bufferObject = newBufferObject(
+        gl, 
+        gl.UNIFORM_BUFFER, 
+        gl.STATIC_DRAW, 
+        new ArrayBuffer(maxSize)
+    ) as UniformBufferObject;
 
-
-    function set(data: TypedArray, dstByteOffset: number = 0, srcOffset: number = 0, length: number = data.length) {
-        new (data.constructor as any)(_buffer).set(data, dstByteOffset, srcOffset, length);
+    bufferObject.bindBuffer = function(binding: number = 0)  {
+        gl.bindBufferBase(gl.UNIFORM_BUFFER, binding, bufferObject.buf);
     }
 
-    function update () {
-        bufferObject.setBuffer(_buffer);
-    }
+    bufferObject.bindBuffer(binding);
+    if (data) bufferObject.set(data);
 
-    function bindUniformBuffer(binding: number = 0) {
-        _gl.bindBufferBase(_gl.UNIFORM_BUFFER, binding, bufferObject.buf);
-    }
-
-    set(data);
-    bindUniformBuffer(binding);
-    bufferObject.bind();
-    update();
-
-    return {
-        buf: bufferObject.buf,
-        bind: bufferObject.bind,
-        bindUniformBuffer,
-        delete: bufferObject.delete,
-        set,
-        setSubBuffer: bufferObject.setSubBuffer,
-        unbind: bufferObject.unbind,
-        update,
-    }
+    return bufferObject;
 }
-
-/* We provide a solution for binding unique buffers, but not buffer ranges:
-
-Binding a "bufferRange" is unsafe, the "maxSize" of the uniform block can vary between platforms!
-To bind a range of the buffer, you would need to add padding which is the (maxSize - dataSize).
-If done properly this may allow for better data packing on platforms where uniform blocks are not aligned to 4 bytes.
-*/

@@ -1,53 +1,61 @@
-import { _gl } from "./Context";
+
 import newVAO from "./VertexArrayObject";
-import { newVBO, mapAttributes } from "./VertexBufferObject";
+import { newBufferObject } from "./BufferObject";
+import { mapAttributes } from "./Attributes";
 
-const _shaderCache = new Map<string, WebGLShader>();
+export const shaderCache = new Map<string, WebGLShader>();
 
-export function clearShaderCache() { _shaderCache.clear(); }
+/**
+ * Creates a new program from a vertex and fragment shader.
+ * @param gl - The WebGL2RenderingContext.
+ * @param vert - The vertex shader source.
+ * @param frag - The fragment shader source.
+ * @returns The WebGLProgram.
+ */
+export function newProgram(gl: WebGL2RenderingContext, vert: string, frag: string) {
+    function compileShader(type: number, source: string) {
+        if (shaderCache.has(source)) return shaderCache.get(source)!;
+    
+        const shader = gl.createShader(type)!;
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            throw new Error(gl.getShaderInfoLog(shader)!);
+        }
+    
+        shaderCache.set(source, shader);
+        return shader;
+    };
 
-function compileShader(type: number, source: string) {
-    if (_shaderCache.has(source)) return _shaderCache.get(source)!;
+    const program = gl.createProgram()!,
+        vs = compileShader(gl.VERTEX_SHADER, vert),
+        fs = compileShader(gl.FRAGMENT_SHADER, frag);
 
-    const shader = _gl.createShader(type)!;
-    _gl.shaderSource(shader, source);
-    _gl.compileShader(shader);
-    if (!_gl.getShaderParameter(shader, _gl.COMPILE_STATUS)) {
-        throw new Error(_gl.getShaderInfoLog(shader)!);
-    }
-
-    _shaderCache.set(source, shader);
-    return shader;
-};
-
-export function newProgram(vert: string, frag: string) {
-    const program = _gl.createProgram()!,
-        vs = compileShader(_gl.VERTEX_SHADER, vert),
-        fs = compileShader(_gl.FRAGMENT_SHADER, frag);
-
-    _gl.attachShader(program, vs);
-    _gl.attachShader(program, fs);
-    _gl.linkProgram(program);
-    if (!_gl.getProgramParameter(program, _gl.LINK_STATUS)) {
-        throw new Error(_gl.getProgramInfoLog(program)!);
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(program)!);
     }
     return program;
 };
 
 /**
  * Creates a "Screen Space Quad" program. A.K.A. two triangles that cover the entire screen.
+ * @param gl - The WebGL2RenderingContext.
  * @param frag - The fragment shader source.
  * @returns [Program, draw function()]
+ * @example const [program, draw] = useSSQ(gl, `#version 300...`)
  */
-export function useSSQ(frag: string): [WebGLProgram, () => void] {
-    const p = newProgram(`#version 300 es\nin vec2 a;void main(){gl_Position=vec4(a,0,1);}`, frag),
-        v = newVAO();
+export function useSSQ(gl: WebGL2RenderingContext, frag: string): [WebGLProgram, DrawFunction] {
+    const p = newProgram(gl, `#version 300 es\nin vec2 a;void main(){gl_Position=vec4(a,0,1);}`, frag),
+        v = newVAO(gl);
     
-    _gl.useProgram(p);
+    gl.useProgram(p);
     
 
     v.bind();
-    newVBO(new Float32Array([
+    newBufferObject(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, new Float32Array([
         -1,-1,
         1,-1,
         -1,1,
@@ -55,7 +63,7 @@ export function useSSQ(frag: string): [WebGLProgram, () => void] {
         1,-1,
         1,1
     ]));
-    mapAttributes(p, 
+    mapAttributes(gl, p, 
         [
             { name: 'a', size: 2 }
         ]
@@ -65,9 +73,11 @@ export function useSSQ(frag: string): [WebGLProgram, () => void] {
     return [
         p, 
         function () {
-            _gl.useProgram(p);
+            gl.useProgram(p);
             v.bind();
-            _gl.drawArrays(_gl.TRIANGLES, 0, 6); 
+            gl.drawArrays(gl.TRIANGLES, 0, 6); 
         }
     ]
 };
+
+type DrawFunction = () => void;

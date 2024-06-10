@@ -1,3 +1,6 @@
-import main from "./background";
+import * as bg from "./background";
+import * as mb from "./mandelbrot";
 
-main();
+bg.default();
+
+mb.default();

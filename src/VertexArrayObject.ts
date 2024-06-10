@@ -1,10 +1,12 @@
-import { _gl } from "./Context";
-
-export default function newVAO() {
-    const v = _gl.createVertexArray()!;
+/**
+ * Creates a new Vertex Array Object with methods to use it.
+ * @param gl - The WebGL2RenderingContext.
+ */
+export default function newVAO(gl: WebGL2RenderingContext) {
+    const v = gl.createVertexArray()!;
     return {
-        bind: () => _gl.bindVertexArray(v),
-        unbind: () => _gl.bindVertexArray(null),
-        delete: () => _gl.deleteVertexArray(v),
+        bind: () => gl.bindVertexArray(v),
+        unbind: () => gl.bindVertexArray(null),
+        delete: () => gl.deleteVertexArray(v),
     };
 }

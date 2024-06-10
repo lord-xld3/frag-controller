@@ -11,8 +11,12 @@ body, html {
 }
 
 h1 {
+    display: block;
+    width: min-content;
+    height: min-content;
+    position: relative;
     font-size: xx-large;
-    padding-left: 10%;
+    margin-left: 10%;
 }
 
 .canvascontainer {
@@ -21,7 +25,6 @@ h1 {
     width: 80%;
     height: 80%;
     margin: 2% 10%;
-    touch-action: none;
 }
 
 .canvascaption {
@@ -29,6 +32,8 @@ h1 {
     padding: 1%;
     text-align: center;
     user-select: none;
+    position: relative;
+    background-color: rgba(0, 0, 0, 0.8);
 }
 
 .canvasbox {
@@ -43,6 +48,7 @@ canvas {
     height: 100%;
     display: block;
     cursor: all-scroll;
+    touch-action: none;
 }
 
 #background {
@@ -62,16 +68,6 @@ canvas {
     justify-content: space-between;
     padding: 1.5%;
     overflow-y: auto;
-}
-
-#fullscreen {
-    width: min-content;
-    height: min-content;
-    padding: 1% 1%;
-    cursor: pointer;
-    background-color: rgba(0, 0, 0, 0);
-    display: block;
-    border-style: none;
 }
 
 #overlay-header {
@@ -124,11 +120,37 @@ canvas {
     color: white;
 }
 
-#fullscreen:hover + .tooltip {
+.fullscreen-button {
+    width: min-content;
+    height: min-content;
+    padding: 1% 1%;
+    cursor: pointer;
+    background-color: rgba(0, 0, 0, 0);
+    display: block;
+    border-style: none;
+}
+
+#bg-fullscreen{
+    position: fixed;
+    right: 0;
+    top: 0;
+}
+
+.fullscreen-container:hover .tooltip {
     display: block;
 }
 
-#fullscreen-tooltip {
+.fullscreen-tooltip {
+    padding: 1%;
+}
+
+#bg-fullscreen-tooltip {
+    top: 2%;
+    right: 4%;
+    padding: 0.5%;
+}
+
+#mb-fullscreen-tooltip {
     right: 10%;
 }
 
