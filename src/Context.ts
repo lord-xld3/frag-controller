@@ -15,7 +15,7 @@ export default function init(
     ViewportResizeFunction,
     CanvasResizeFunction, 
 ] {
-    const gl = canvas.getContext('webgl2', options)!;
+    const gl = canvas.getContext('webgl2', options) as WebGL2RenderingContext;
     if (!gl) throw new Error('WebGL2 is not supported');
 
     return [

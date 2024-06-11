@@ -11,7 +11,7 @@ module.exports = {
     entry: {
         main: [
             './main.ts', 
-            './styles.css',
+            './main.css',
         ],
     },
     output: {
@@ -56,13 +56,22 @@ module.exports = {
             },
         }),
         new MiniCssExtractPlugin({
-            filename: 'style.css', // Specify the name for the generated CSS file
+            filename: 'main.css', // Specify the name for the generated CSS file
         }),
         new BundleAnalyzerPlugin(),
     ],
     optimization: {
         minimizer: [
-            new TerserPlugin(),
+            new TerserPlugin({
+                terserOptions: {
+                    compress: {
+                        drop_console: true, // Removes console.* calls
+                        keep_fargs: false, // Removes unused function arguments
+                        keep_infinity: true, // Keeps the keyword infinity
+                        unsafe: true, // Apply Terser's unsafe optimizations
+                    },
+                },
+            }),
             new CssMinimizerPlugin(),
         ],
     },

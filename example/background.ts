@@ -25,7 +25,7 @@ export default function main(){
         float wave = iTime + dist;
         
         vec3 color = (0.5 + 0.5 * cos(2.0 * wave + vec3(0.0, 2.0, 4.0))) // RGB waves
-            * (1.0 -smoothstep(0.4, 0.6, abs(sin(wave * 9.0)))); // Edge smoothing
+            * (1.0 - smoothstep(0.4, 0.6, abs(sin(wave * 9.0)))); // Edge smoothing
 
         o = vec4(color, 1.0);
     }`;
@@ -40,50 +40,10 @@ export default function main(){
         0.1, // iZoom
     ]));
 
-    let eCache: PointerEvent[] = [];
-    let zoom = 0.1;
-    gluu.pointerEvents(canvas, {
-        down: (e) => {
-            eCache.push(e);
-            if (eCache.length === 1) canvas.setPointerCapture(e.pointerId);
-        },
-        move: (e) => {
-            if (eCache.length === 0) return;
-            uniformBuffer.set(new Float32Array([
-                2.*e.offsetX / canvas.clientWidth - 1.0, 
-                2.*-e.offsetY / canvas.clientHeight + 1.0
-            ]), 0); 
-        },
-        up: (e) => {
-            eCache = eCache.filter((ev) => ev.pointerId !== e.pointerId);
-            canvas.releasePointerCapture(e.pointerId);
-        },
-        wheel: (e) => {
-            uniformBuffer.set(new Float32Array([
-                zoom = Math.min(
-                    Math.max(
-                        //TODO: We can probably improve the "scaling" of the zoom.
-                        zoom - e.deltaY * 2e-4 * Math.exp(zoom), 
-                        0.01
-                    ), 
-                    3.
-                )
-            ]), 20);
-        }
-    }).bind();
-
-    // Resize listener.
-    window.addEventListener('resize', () => {
-        const [w, h] = resizeCanvas();
-        resizeViewport(w, h);
-        // Usually we would use uniformBuffer.bind(), but its the only buffer bound to UNIFORM_BUFFER.
-        uniformBuffer.set(new Float32Array([2/w, 2/h]), 8);
-    });
-    window.dispatchEvent(new Event('resize'));
-
     // Fullscreen button.
     const fullscreen = document.getElementById('bg-fullscreen') as HTMLButtonElement;
     const container = document.getElementById('bg-container') as HTMLElement;
+    const fscontainer = document.getElementById('bg-fullscreen-container') as HTMLElement;
     fullscreen.onclick = () => {
         if (document.fullscreenElement) {
             document.exitFullscreen();
@@ -95,8 +55,63 @@ export default function main(){
             fullscreen.value = '🔲';
         }
     };
-    
 
+    canvas.ondblclick = (e) => {
+        e.preventDefault();
+        fscontainer.style.display = fscontainer.style.display === 'none' ? 'block' : 'none';
+    };
+
+    let H = 2/canvas.clientHeight * window.devicePixelRatio;
+    let eCache: PointerEvent[] = [];
+    let z = 0.1;
+    let pd = 0;
+    gluu.pointerEvents(canvas, {
+        down: (e) => {
+            eCache.push(e);
+            if (eCache.length === 1) canvas.setPointerCapture(e.pointerId);
+            if (eCache.length === 3) fscontainer.style.display = fscontainer.style.display === 'none' ? 'block' : 'none';
+        },
+        move: (e) => {
+            let f = eCache.findIndex(ev => ev.pointerId === e.pointerId);
+            eCache[f] = e;
+            if (eCache.length === 1) {
+                uniformBuffer.set(new Float32Array([
+                    2.*e.offsetX / canvas.clientWidth - 1.0, 
+                    2.*-e.offsetY / canvas.clientHeight + 1.0
+                ]), 0); 
+            }
+            else if (eCache.length === 2 && e.isPrimary) {
+                const [e1, e2] = eCache;
+                const d = Math.hypot(e1.clientX - e2.clientX, e1.clientY - e2.clientY);
+                if (pd === 0) return pd = d;
+                uniformBuffer.set(new Float32Array([z = Math.max(z + (d - pd) * z * H * 4, .01)]), 20);
+                pd = d;
+            }
+        },
+        up: (e) => {
+            eCache = eCache.filter((ev) => ev.pointerId !== e.pointerId);
+            if (eCache.length < 2) pd = 0;
+            canvas.releasePointerCapture(e.pointerId);
+        },
+        wheel: (e) => {
+            e.preventDefault();
+            uniformBuffer.set(new Float32Array([
+                z = Math.max(z - e.deltaY * z * H, .01),
+            ]), 20);
+        }
+    }).bind();
+
+    // Resize listener.
+    window.addEventListener('resize', () => {
+        const [w, h] = resizeCanvas();
+        resizeViewport(w, h);
+        H = 2/h;
+        // Usually we would use uniformBuffer.bind(), but its the only buffer bound to UNIFORM_BUFFER.
+        uniformBuffer.set(new Float32Array([2/w, H]), 8);
+        
+    });
+    window.dispatchEvent(new Event('resize'));
+    
     gl.useProgram(program);
     gl.clearColor(0, 0, 0, 1);
 

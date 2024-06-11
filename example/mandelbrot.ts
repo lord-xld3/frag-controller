@@ -63,11 +63,11 @@ export default function main(){
     ]), 8);
 
     // Triple press event listener.
-    let H = 2/(canvas as HTMLCanvasElement).clientHeight * window.devicePixelRatio,
+    let H = 2/canvas.clientHeight * window.devicePixelRatio,
         ec: PointerEvent[] = [], // event cache
         z = 0, // default zoom level
         dx = -0.74, // delta x
-        dy = 0.19, // delta y
+        dy = 0.18, // delta y
         m = Math.exp(-z), // exp(-zoom)
         pd = 0; // previous distance between two pointers
 
@@ -81,26 +81,33 @@ export default function main(){
     gluu.pointerEvents(canvas, {
         down: (e)=>{
             ec.push(e);
-            if (ec.length === 1) {
-                canvas.setPointerCapture(e.pointerId);
-            } else if (ec.length === 3) {
-                panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
-            }
+            if (ec.length === 1) canvas.setPointerCapture(e.pointerId);
+            if (ec.length === 3) panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
         },
         move: (e)=>{
+            let f = ec.findIndex(ev => ev.pointerId === e.pointerId);
+            ec[f] = e;
             if (ec.length === 1) {
                 dx -= e.movementX * m * H,
                 dy += e.movementY * m * H;
                 base.bind();
                 base.set(new Float32Array([dx, dy]), 8);
             }
+            if (ec.length === 2 && e.isPrimary) {
+                const [e1, e2] = ec;
+                const d = Math.hypot(e1.clientX - e2.clientX, e1.clientY - e2.clientY);
+                if (pd === 0) return pd = d;
+                z += (d - pd) * H * 2; // Magic number 2 feels right.
+                pd = d;
+                controlZoom.value = z.toString();
+                setZoom(z);
+            }
             requestAnimationFrame(render);
         },
         up: (e)=>{ 
             ec = ec.filter((p)=>p.pointerId !== e.pointerId);
-            if (ec.length === 0) {
-                canvas.releasePointerCapture(e.pointerId);
-            }
+            if (ec.length < 2) pd = 0;
+            canvas.releasePointerCapture(e.pointerId);
         },
         wheel: (e) => {
             e.preventDefault();

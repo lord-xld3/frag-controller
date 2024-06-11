@@ -53,7 +53,6 @@ export function useSSQ(gl: WebGL2RenderingContext, frag: string): [WebGLProgram,
     
     gl.useProgram(p);
     
-
     v.bind();
     newBufferObject(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, new Float32Array([
         -1,-1,
