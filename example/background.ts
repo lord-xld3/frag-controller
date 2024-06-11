@@ -53,7 +53,7 @@ export default function main(){
 
     canvas.ondblclick = (e) => {
         e.preventDefault();
-        fscontainer.style.display = fscontainer.style.display === 'none' ? 'block' : 'none';
+        fscontainer.style.display = fscontainer.style.display === 'none' ? 'flex' : 'none';
     };
 
     let H = 2/canvas.clientHeight * window.devicePixelRatio;
@@ -64,7 +64,7 @@ export default function main(){
         down: (e) => {
             eCache.push(e);
             if (eCache.length === 1) canvas.setPointerCapture(e.pointerId);
-            if (eCache.length === 3) fscontainer.style.display = fscontainer.style.display === 'none' ? 'block' : 'none';
+            if (eCache.length === 3) fscontainer.style.display = fscontainer.style.display === 'none' ? 'flex' : 'none';
         },
         move: (e) => {
             let f = eCache.findIndex(ev => ev.pointerId === e.pointerId);

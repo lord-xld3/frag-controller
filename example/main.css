@@ -113,7 +113,7 @@ canvas {
     user-select: none;
     position: absolute;
     display: none;
-    padding: 1vh;
+    padding: 0.5vh;
     background-color: rgba(0, 0, 0, 0.75);
     text-align: end;
     color: white;
@@ -127,11 +127,7 @@ canvas {
     background-color: rgba(0, 0, 0, 0);
     display: block;
     border-style: none;
-}
-
-#bg-fullscreen{
-    right: 0;
-    top: 0;
+    padding: 1vh;
 }
 
 .fullscreen-container:hover .tooltip {
@@ -141,16 +137,20 @@ canvas {
 .fullscreen-container {
     display: flex;
     position: relative;
-    width: 100%;
+    width: min-content;
+    height: min-content;
     flex-direction: row;
     justify-content: flex-end;
     align-items: baseline;
 }
 
+#bg-fullscreen-container {
+    width: 100%;
+}
+
 .fullscreen-tooltip {
     position: relative;
     margin: 0;
-    padding: 0;
     right: 0;
 }
 
