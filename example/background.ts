@@ -6,28 +6,25 @@ export default function main(){
     precision highp float;
     precision highp int;
 
-    // Rainbow Reciprocals by Kyle Simmons.
+    // Rainbow Folding by Kyle Simmons.
+    // https://www.shadertoy.com/view/lXG3zd
 
-    #define f gl_FragCoord.xy
+    #define F gl_FragCoord.xy
 
-    uniform I { vec2 iMouse, iResolution; float iTime, iZoom; };
+    uniform I { vec2 iMouse, iResolution; float T, iZoom; };
 
     out vec4 o;
 
     void main() {
         // Normalized pixel coordinates
-        vec2 uv = iResolution * f - 1. - iMouse;
+        vec2 f = iResolution * F - 1. - iMouse;
 
-        // 1.0 / distance from center
-        float dist = length(1./uv*iZoom);
-
-        // Generate wave pattern
-        float wave = iTime + dist;
-        
-        vec3 color = (0.5 + 0.5 * cos(2.0 * wave + vec3(0.0, 2.0, 4.0))) // RGB waves
-            * (1.0 - smoothstep(0.4, 0.6, abs(sin(wave * 9.0)))); // Edge smoothing
-
-        o = vec4(color, 1.0);
+        float W = T + abs(f.x*f.y*4./iZoom) + sin(sin(T)*dot(f,f)*4.), // wave
+            v = sin(W*9.);
+        o = vec4((.5+.5*cos(W + vec3(0,2,4))) // RGB waves
+            *(smoothstep(1.,-1.,(abs(v)-.5)/fwidth(v) )), // Black edges
+            1. // alpha
+        );
     }`;
     const [program, draw] = gluu.useSSQ(gl, frag);
     gluu.shaderCache.clear();
@@ -37,7 +34,7 @@ export default function main(){
         0, 0, // iMouse
         canvas.clientWidth, canvas.clientHeight, // iResolution
         0, // iTime
-        0.1, // iZoom
+        1, // iZoom
     ]));
 
     // Fullscreen button.
@@ -63,7 +60,7 @@ export default function main(){
 
     let H = 2/canvas.clientHeight * window.devicePixelRatio;
     let eCache: PointerEvent[] = [];
-    let z = 0.1;
+    let z = 1;
     let pd = 0;
     gluu.pointerEvents(canvas, {
         down: (e) => {
@@ -103,7 +100,7 @@ export default function main(){
 
     // Resize listener.
     window.addEventListener('resize', () => {
-        const [w, h] = resizeCanvas();
+        const [w, h] = resizeCanvas(window.devicePixelRatio * 2);
         resizeViewport(w, h);
         H = 2/h;
         // Usually we would use uniformBuffer.bind(), but its the only buffer bound to UNIFORM_BUFFER.
@@ -118,7 +115,7 @@ export default function main(){
     function render(T: number) {
         gl.clear(gl.COLOR_BUFFER_BIT);
         // Usually we would use uniformBuffer.bind(), but its the only buffer bound to UNIFORM_BUFFER.
-        uniformBuffer.set(new Float32Array([T*2e-5]), 16); // Offset 8 bytes to iTime.
+        uniformBuffer.set(new Float32Array([T*1e-4]), 16); // Offset 8 bytes to iTime.
 
         draw();
         requestAnimationFrame(render);
