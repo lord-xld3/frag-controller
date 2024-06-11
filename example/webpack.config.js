@@ -12,6 +12,7 @@ module.exports = {
         main: [
             './main.ts', 
             './main.css',
+            './favicon.ico'
         ],
     },
     output: {
@@ -25,7 +26,7 @@ module.exports = {
                 use: [MiniCssExtractPlugin.loader, 'css-loader'],
             },
             {
-                test: /\.(png|svg|jpg|gif|webp|frag|vert|sh)$/,
+                test: /\.(png|svg|jpg|gif|webp|frag|vert|sh|ico)$/,
                 use: {
                     loader: 'file-loader',
                     options: {
@@ -54,6 +55,7 @@ module.exports = {
                 removeStyleLinkTypeAttributes: true,
                 useShortDoctype: true,
             },
+            favicon: './favicon.ico',
         }),
         new MiniCssExtractPlugin({
             filename: 'main.css', // Specify the name for the generated CSS file

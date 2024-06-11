@@ -113,18 +113,16 @@ canvas {
     user-select: none;
     position: absolute;
     display: none;
-    padding: 1%;
+    padding: 1vh;
     background-color: rgba(0, 0, 0, 0.75);
-    top: 2%;
-    right: 2%;
     text-align: end;
     color: white;
+    right: 2%;
 }
 
 .fullscreen-button {
     width: min-content;
     height: min-content;
-    padding: 1% 1%;
     cursor: pointer;
     background-color: rgba(0, 0, 0, 0);
     display: block;
@@ -132,7 +130,6 @@ canvas {
 }
 
 #bg-fullscreen{
-    position: fixed;
     right: 0;
     top: 0;
 }
@@ -141,18 +138,20 @@ canvas {
     display: block;
 }
 
+.fullscreen-container {
+    display: flex;
+    position: relative;
+    width: 100%;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: baseline;
+}
+
 .fullscreen-tooltip {
-    padding: 1%;
-}
-
-#bg-fullscreen-tooltip {
-    top: 2%;
-    right: 4%;
-    padding: 0.5%;
-}
-
-#mb-fullscreen-tooltip {
-    right: 10%;
+    position: relative;
+    margin: 0;
+    padding: 0;
+    right: 0;
 }
 
 /* Tooltip visibility on input hover or active */

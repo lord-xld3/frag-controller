@@ -11,19 +11,17 @@ export default function main(){
 
     #define F gl_FragCoord.xy
 
-    uniform I { vec2 iMouse, iResolution; float T, iZoom; };
+    uniform I { vec2 M, R; float T, Z; };
 
     out vec4 o;
 
     void main() {
-        // Normalized pixel coordinates
-        vec2 f = iResolution * F - 1. - iMouse;
-
-        float W = T + abs(f.x*f.y*4./iZoom) + sin(sin(T)*dot(f,f)*4.), // wave
+        vec2 f = R * F - 1. - M;
+        float W = T + abs(f.x*f.y*4./Z) + sin(sin(T)*dot(f,f)*4.),
             v = sin(W*9.);
-        o = vec4((.5+.5*cos(W + vec3(0,2,4))) // RGB waves
-            *(smoothstep(1.,-1.,(abs(v)-.5)/fwidth(v) )), // Black edges
-            1. // alpha
+        o = vec4(
+            (.5+.5*cos(W + vec3(0,2,4)))*(smoothstep(1.,-1.,(abs(v)-.5)/fwidth(v))),
+            1.
         );
     }`;
     const [program, draw] = gluu.useSSQ(gl, frag);
