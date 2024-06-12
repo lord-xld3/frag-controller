@@ -16,9 +16,12 @@ export default function main(){
     out vec4 o;
 
     void main() {
-        vec2 f = R * F - 1. - M;
-        float W = T + abs(f.x*f.y*4./Z) + sin(sin(T)*dot(f,f)*4.),
-            v = sin(W*9.);
+        float A = cos(radians(T * 45.))*4.,
+            B = sin(A),
+            C = cos(A);
+        vec2 f = (R * F - 1. - M) * mat2(C, B, -B, C) * (2.+.5*cos(T));
+        float W = T + abs(f.x*f.y*2./Z) + sin(sin(T)*dot(f,f)*4.),
+            v = sin(W*3.);
         o = vec4(
             (.5+.5*cos(W + vec3(0,2,4)))*(smoothstep(1.,-1.,(abs(v)-.5)/fwidth(v))),
             1.
@@ -98,7 +101,7 @@ export default function main(){
 
     // Resize listener.
     window.addEventListener('resize', () => {
-        const [w, h] = resizeCanvas(window.devicePixelRatio * 2);
+        const [w, h] = resizeCanvas();
         resizeViewport(w, h);
         H = 2/h;
         // Usually we would use uniformBuffer.bind(), but its the only buffer bound to UNIFORM_BUFFER.
@@ -113,7 +116,7 @@ export default function main(){
     function render(T: number) {
         gl.clear(gl.COLOR_BUFFER_BIT);
         // Usually we would use uniformBuffer.bind(), but its the only buffer bound to UNIFORM_BUFFER.
-        uniformBuffer.set(new Float32Array([T*1e-4]), 16); // Offset 8 bytes to iTime.
+        uniformBuffer.set(new Float32Array([T*5e-5]), 16); // Offset 8 bytes to iTime.
 
         draw();
         requestAnimationFrame(render);
