@@ -1,12 +1,8 @@
-import { TypedArray } from "./Types";
-
 export interface BufferObject {
     buf: WebGLBuffer;
     bind: () => void;
-    deleteBuffer: () => void;
     initBuffer: (data: ArrayBuffer | ArrayBufferView) => void;
     set: (data: ArrayBufferView, dstByteOffset?: number, srcOffset?: number, length?: number) => void;
-    unbind: () => void;
 }
 
 /**
@@ -36,14 +32,6 @@ export function newBufferObject(
         gl.bindBuffer(target, buf);
     }
 
-    function unbind() {
-        gl.bindBuffer(target, null);
-    }
-
-    function deleteBuffer() {
-        gl.deleteBuffer(buf);
-    }
-
     function initBuffer(data: ArrayBuffer | ArrayBufferView) {
         gl.bufferData(target, data, usage);
     }
@@ -65,9 +53,7 @@ export function newBufferObject(
     return {
         buf,
         bind,
-        deleteBuffer,
         initBuffer,
         set,
-        unbind,
     };
 };

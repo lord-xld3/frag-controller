@@ -1,33 +1,14 @@
 import * as gluu from '../index';
-export default function main(){
+
+export default async function main(){
     const canvas = document.getElementById('background') as HTMLCanvasElement;
     const [gl, resizeViewport, resizeCanvas] = gluu.init(canvas);
-    const frag = `#version 300 es
-    precision highp float;
-    precision highp int;
 
-    // Rainbow Folding by Kyle Simmons.
-    // https://www.shadertoy.com/view/lXG3zd
+    let frag = await fetch('./shaders/background.fs').then((res) => res.text());
 
-    #define F gl_FragCoord.xy
+    let [program, draw] = gluu.useSSQ(gl, frag);
 
-    uniform I { vec2 M, R; float T, Z; };
 
-    out vec4 o;
-
-    void main() {
-        float A = cos(radians(T * 45.))*4.,
-            B = sin(A),
-            C = cos(A);
-        vec2 f = (R * F - 1. - M) * mat2(C, B, -B, C) * (2.+.5*cos(T));
-        float W = T + abs(f.x*f.y*2./Z) + sin(sin(T)*dot(f,f)*4.),
-            v = sin(W*3.);
-        o = vec4(
-            (.5+.5*cos(W + vec3(0,2,4)))*(smoothstep(1.,-1.,(abs(v)-.5)/fwidth(v))),
-            1.
-        );
-    }`;
-    const [program, draw] = gluu.useSSQ(gl, frag);
     gluu.shaderCache.clear();
     //                                                Binding point 0.
     const [maxSize] = gluu.getUniformBlock(gl, program, 'I', 0);
@@ -59,7 +40,7 @@ export default function main(){
         fscontainer.style.display = fscontainer.style.display === 'none' ? 'flex' : 'none';
     };
 
-    let H = 2/canvas.clientHeight * window.devicePixelRatio;
+    let H: number;
     let eCache: PointerEvent[] = [];
     let z = 1;
     let pd = 0;
@@ -74,15 +55,15 @@ export default function main(){
             eCache[f] = e;
             if (eCache.length === 1) {
                 uniformBuffer.set(new Float32Array([
-                    2.*e.offsetX / canvas.clientWidth - 1.0, 
-                    2.*-e.offsetY / canvas.clientHeight + 1.0
+                    2*e.offsetX / canvas.clientWidth - 1, 
+                    2*-e.offsetY / canvas.clientHeight + 1
                 ]), 0); 
             }
             else if (eCache.length === 2 && e.isPrimary) {
                 const [e1, e2] = eCache;
                 const d = Math.hypot(e1.clientX - e2.clientX, e1.clientY - e2.clientY);
                 if (pd === 0) return pd = d;
-                uniformBuffer.set(new Float32Array([z = Math.max(z + (d - pd) * z * H * 4, .01)]), 20);
+                uniformBuffer.set(new Float32Array([z = Math.max(z + (d - pd) * z*H * 4, .5)]), 20);
                 pd = d;
             }
         },
@@ -94,7 +75,7 @@ export default function main(){
         wheel: (e) => {
             e.preventDefault();
             uniformBuffer.set(new Float32Array([
-                z = Math.max(z - e.deltaY * z * H, .01),
+                z = Math.max(z - e.deltaY * z*H, .5),
             ]), 20);
         }
     }).bind();

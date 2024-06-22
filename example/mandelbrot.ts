@@ -1,34 +1,15 @@
 import * as gluu from '../index';
 
-export default function main(){
+export default async function main(){
     // Slightly different initialization.
     const canvas = document.getElementById('mandelbrot-canvas') as HTMLCanvasElement;
     const [gl, resizeViewport, resizeCanvas] = gluu.init(canvas);
 
-    const frag = `#version 300 es
-    precision highp float;
-    precision highp int;
+    let frag = await fetch('./shaders/mandelbrot.fs').then((res) => res.text());
 
-    #define f gl_FragCoord.xy
-
-    uniform I { uvec2 iResolution; vec2 iDelta; float iTime, iZoom; };
-    uniform U { uvec2 J; vec2 E; vec3 C; };
-
-    out vec4 o;
-
-    const float Y = 12.;
-
-    void main() {
-        vec2 r = vec2(iResolution);
-        float W = 1./(exp(iZoom)*r.y), F = E.y * W + E.x, K = float(J.y - J.x);
-        vec2 n = (2.*f - r)*W + iDelta, p = n, z = n*n;
-        int i = 0, H = int(K * pow(iZoom/Y, 2.)) + int(J.x);
-        while (i < H && z.x < F) { n = vec2(z.x - z.y + p.x, 2.*n.x*n.y + p.y); z = n*n; ++i; }
-        o = (i < H) ? vec4(.5 + .5 * cos(4. + (float(i) + 1. - log2(log2(dot(n, n)) / log2(F))) * .1 + C), 1) : vec4(0,0,0,1);
-    }`;
 
     // Create program using a screen-space quad vertex shader.
-    const [program, draw] = gluu.useSSQ(gl, frag);
+    let [program, draw] = gluu.useSSQ(gl, frag);
 
     // In this usage, we let the user update the devicePixelRatio, so we don't get the dpr from the "true size".
     let dpr = window.devicePixelRatio;
@@ -51,19 +32,17 @@ export default function main(){
     };
 
     const [ISize] = gluu.getUniformBlock(gl, program, 'I', 0);
-    const base = gluu.newUniformBuffer(gl, ISize, 0, new Uint32Array([
+    const base = gluu.newUniformBuffer(gl, ISize, 0, new Float32Array([
         // Resolution
-        canvas.clientWidth, 
-        canvas.clientHeight,
-    ]));
-    base.set(new Float32Array([
+        canvas.clientWidth * dpr, 
+        canvas.clientHeight * dpr,
         -0.74, 0.18, // Delta
         0, // Time
         0, // Zoom
-    ]), 8);
+    ]));
 
     // Triple press event listener.
-    let H = 2/canvas.clientHeight * window.devicePixelRatio,
+    let H: number,
         ec: PointerEvent[] = [], // event cache
         z = 0, // default zoom level
         dx = -0.74, // delta x
@@ -123,7 +102,7 @@ export default function main(){
         resizeViewport(w, h);
         H = 2/canvas.clientHeight;
         base.bind();
-        base.set(new Uint32Array([w, h]));
+        base.set(new Float32Array([w, h]));
         requestAnimationFrame(render);
     });
     window.dispatchEvent(new Event('resize'));
@@ -147,7 +126,7 @@ export default function main(){
         resizeViewport(w, h);
         H = 2/canvas.clientHeight;
         base.bind();
-        base.set(new Uint32Array([w, h]));
+        base.set(new Float32Array([w, h]));
         requestAnimationFrame(render);
     }
 

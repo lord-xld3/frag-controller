@@ -12,7 +12,9 @@ module.exports = {
         main: [
             './main.ts', 
             './main.css',
-            './favicon.ico'
+            './favicon.ico',
+            './shaders/background.fs',
+            './shaders/mandelbrot.fs',
         ],
     },
     output: {
@@ -23,10 +25,12 @@ module.exports = {
         rules: [
             {
                 test: /\.css$/,
+                exclude: /node_modules/,
                 use: [MiniCssExtractPlugin.loader, 'css-loader'],
             },
             {
-                test: /\.(png|svg|jpg|gif|webp|frag|vert|sh|ico)$/,
+                test: /\.(png|svg|jpg|gif|webp|sh|ico)$/,
+                exclude: /node_modules/,
                 use: {
                     loader: 'file-loader',
                     options: {
@@ -35,14 +39,32 @@ module.exports = {
                 },
             },
             {
-                test: /\.tsx?$/,
-                use: 'ts-loader',
+                test: /\.(glsl|vs|fs|vert|frag)$/,
                 exclude: /node_modules/,
+                use: [
+                    {
+                        loader: 'file-loader',
+                        options: {
+                            name: '[path][name].[ext]',
+                        },
+                    },
+                    {
+                        loader: 'webpack-glsl-minify',
+                        options: {
+                            output: 'sourceOnly',
+                        },
+                    }
+                ]
+            },
+            {
+                test: /\.tsx?$/,
+                exclude: /node_modules/,
+                use: 'ts-loader',
             },
         ],
     },
     resolve: {
-        extensions: ['.tsx', '.ts', '.js'],
+        extensions: ['.tsx', '.ts', '.js', '.css', '.glsl', '.vs', '.fs', '.vert', '.frag'],
     },
     plugins: [
         new HtmlWebpackPlugin({

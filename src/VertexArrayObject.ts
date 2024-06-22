@@ -7,6 +7,5 @@ export default function newVAO(gl: WebGL2RenderingContext) {
     return {
         bind: () => gl.bindVertexArray(v),
         unbind: () => gl.bindVertexArray(null),
-        delete: () => gl.deleteVertexArray(v),
     };
 }
