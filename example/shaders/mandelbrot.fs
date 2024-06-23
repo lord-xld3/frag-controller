@@ -6,6 +6,7 @@ out vec4 o;
 
 uniform I {
     vec2 R, D;
+    // force time to be highp float
     highp float T, Z;
 };
 

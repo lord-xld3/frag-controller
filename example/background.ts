@@ -1,5 +1,4 @@
 import * as gluu from '../index';
-
 export default async function main(){
     const canvas = document.getElementById('background') as HTMLCanvasElement;
     const [gl, resizeViewport, resizeCanvas] = gluu.init(canvas);
@@ -7,7 +6,6 @@ export default async function main(){
     let frag = await fetch('./shaders/background.fs').then((res) => res.text());
 
     let [program, draw] = gluu.useSSQ(gl, frag);
-
 
     gluu.shaderCache.clear();
     //                                                Binding point 0.
