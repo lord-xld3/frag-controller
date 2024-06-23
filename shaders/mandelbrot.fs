@@ -1,0 +1,3 @@
+#version 300 es
+#define A  gl_FragCoord.xy
+precision highp float;out vec4 o;uniform I{vec2 B,C;highp float D,E;};uniform U{uvec2 F;vec2 G;vec3 H;};void main(){float I=1./(exp(E)*B.y),J=G.y*I+G.x,K=float(F.y-F.x);vec2 L=(A+A-B)*I+C,M=L,N=L*L;int O=0,P=int(K*pow(E/12.,2.))+int(F.x);while(O<P&&N.x<J){L=vec2(N.x-N.y+M.x,2.*L.x*L.y+M.y);N=L*L;++O;}o=(O<P)?vec4(.5+.5*cos(4.+(float(O)+1.-log2(log2(dot(L,L))/log2(J)))*.1+H),1):vec4(0,0,0,1);}
