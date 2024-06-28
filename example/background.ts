@@ -12,22 +12,23 @@ export default async function loadBackground() {
     let frag = await fetch('./shaders/background.fs').then((res) => res.text());
     let [program, draw] = gluu.useSSQ(gl, frag);
 
-    const [ISize] = gluu.getUniformBlock(gl, program, 'U', 0);
-    const base = gluu.newUniformBuffer(gl, ISize, 0, new Float32Array([
+    const [ISize] = gluu.getUniformBlock(gl, program, 'U');
+    const base = gluu.newUniformBuffer(gl, ISize);
+    base(new Float32Array([
         0, 0, // mouse
         0, 0, // resolution
         0, // time
         1 // zoom
-    ]));
+    ]))
 
     function setZoom(z: number) {
         m = Math.exp(-z);
-        base.set(new Float32Array([z]), 20);
+        base(new Float32Array([z]), 20);
     }
 
     function setResolution(w: number, h: number) {
         [W, H] = [2/w, 2/h];
-        base.set(new Float32Array([W, H]), 8)
+        base(new Float32Array([W, H]), 8)
     }
     
     let W: number,
@@ -56,7 +57,7 @@ export default async function loadBackground() {
             let f = ec.findIndex(ev => ev.pointerId === e.pointerId);
             ec[f] = e;
             if (ec.length === 1) {
-                base.set(new Float32Array([e.clientX*W - 1, e.clientY*H - 1,]));
+                base(new Float32Array([e.clientX*W - 1, e.clientY*H - 1,]));
             }
             if (ec.length === 2 && e.isPrimary) {
                 const [e1, e2] = ec;
@@ -117,7 +118,7 @@ export default async function loadBackground() {
     function render(T: number) {
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        base.set(new Float32Array([T*5e-5]), 16)
+        base(new Float32Array([T*5e-5]), 16)
 
         // Draw a screen-space quad for the fragment shader.
         draw();

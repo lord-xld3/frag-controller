@@ -1,9 +1,5 @@
-import { TypedArray } from "./Types";
-import { newBufferObject, BufferObject } from "./BufferObject";
-
-export interface UniformBufferObject extends BufferObject {
-    bindBuffer: (binding?: number) => void;
-}
+import { obj } from "./Types";
+import { newBuffer } from "./BufferObject";
 
 type MaxSize = number;
 type BindBlockFunction = (binding?: number) => void;
@@ -107,21 +103,22 @@ export function newUniformBuffer(
     gl: WebGL2RenderingContext,
     maxSize: number, 
     binding: number = 0,
-    data?: TypedArray, 
-): UniformBufferObject {
-    const bufferObject = newBufferObject(
-        gl, 
+): ((data: ArrayBufferView, dstByteOffset?: number, srcOffset?: number, length?: number | undefined) => void) 
+    & { buf: WebGLBuffer; bind: () => void; } 
+    & { bindbuffer: (binding?: number) => void; } 
+{
+    const bufferObject = newBuffer(
+        gl,
+        maxSize,
         gl.UNIFORM_BUFFER, 
-        gl.STATIC_DRAW, 
-        new ArrayBuffer(maxSize)
-    ) as UniformBufferObject;
+        gl.STATIC_DRAW,
+    );
 
-    bufferObject.bindBuffer = function(binding: number = 0)  {
+    const bindBuffer = function(binding: number = 0)  {
         gl.bindBufferBase(gl.UNIFORM_BUFFER, binding, bufferObject.buf);
     }
 
-    bufferObject.bindBuffer(binding);
-    if (data) bufferObject.set(data);
+    bindBuffer(binding);
 
-    return bufferObject;
+    return obj(bufferObject, { bindbuffer: bindBuffer })
 }

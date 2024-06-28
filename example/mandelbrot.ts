@@ -15,10 +15,10 @@ export default async function loadMandelbrot() {
     // In this usage, we let the user update the devicePixelRatio, so we don't get the dpr from the "true size".
     let dpr = window.devicePixelRatio;
 
-    const [ISize] = gluu.getUniformBlock(gl, program, 'U', 0);
-    const base = gluu.newUniformBuffer(gl, ISize, 0);
-    base.set(new Uint32Array([80, 400]))
-    base.set(new Float32Array([
+    const [ISize] = gluu.getUniformBlock(gl, program, 'U');
+    const base = gluu.newUniformBuffer(gl, ISize);
+    base(new Uint32Array([80, 400]))
+    base(new Float32Array([
         // Escape
         6, 0.5e4,
         // Resolution
@@ -33,11 +33,11 @@ export default async function loadMandelbrot() {
     function setZoom(z: number) {
         controlZoom.value = z.toString();;
         m = Math.exp(-z);
-        base.set(new Float32Array([z]), 44);
+        base(new Float32Array([z]), 44);
     }
 
     function setResolution(w: number, h: number) {
-        base.set(new Float32Array([w, h]), 16)
+        base(new Float32Array([w, h]), 16)
     }
 
     const controlDPR = gluu.obj(document.createElement('input'), {
@@ -80,7 +80,7 @@ export default async function loadMandelbrot() {
         value: "80",
         oninput: () => {
             controlMaxIter.min = controlMinIter.value.toString();
-            base.set(new Uint32Array([controlMinIter.valueAsNumber]), 0);
+            base(new Uint32Array([controlMinIter.valueAsNumber]), 0);
             requestAnimationFrame(render);
         }
     })
@@ -94,7 +94,7 @@ export default async function loadMandelbrot() {
         value: "400",
         oninput: () => {
             controlMinIter.max = controlMaxIter.value.toString();
-            base.set(new Uint32Array([controlMaxIter.valueAsNumber]), 4);
+            base(new Uint32Array([controlMaxIter.valueAsNumber]), 4);
             requestAnimationFrame(render);
         }
     })
@@ -108,7 +108,7 @@ export default async function loadMandelbrot() {
         value: "6",
         oninput: () => {
             controlEscapeMax.min = controlEscapeMin.value.toString();
-            base.set(new Float32Array([controlEscapeMin.valueAsNumber]), 8);
+            base(new Float32Array([controlEscapeMin.valueAsNumber]), 8);
             requestAnimationFrame(render);
         }
     })
@@ -121,7 +121,7 @@ export default async function loadMandelbrot() {
         max: "1e4",
         value: "5e3",
         oninput: () => {
-            base.set(new Float32Array([controlEscapeMax.valueAsNumber]), 12);
+            base(new Float32Array([controlEscapeMax.valueAsNumber]), 12);
             requestAnimationFrame(render);
         }
     })
@@ -134,7 +134,7 @@ export default async function loadMandelbrot() {
         max: "1",
         value: "0",
         oninput: () => {
-            base.set(new Float32Array([
+            base(new Float32Array([
                 ...gluu.adjustNonZeroHue(3, 4, 5, controlHue.valueAsNumber)
             ]), 32);
             requestAnimationFrame(render);
@@ -149,7 +149,7 @@ export default async function loadMandelbrot() {
         max: ".5",
         value: ".1",
         oninput: () => {
-            base.set(new Float32Array([controlColorScale.valueAsNumber]), 48);
+            base(new Float32Array([controlColorScale.valueAsNumber]), 48);
             requestAnimationFrame(render);
         }
     })
@@ -181,7 +181,7 @@ export default async function loadMandelbrot() {
             if (ec.length === 1) {
                 dx -= e.movementX * m * H,
                 dy += e.movementY * m * H;
-                base.set(new Float32Array([dx, dy]), 24);
+                base(new Float32Array([dx, dy]), 24);
             }
             if (ec.length === 2 && e.isPrimary) {
                 const [e1, e2] = ec;

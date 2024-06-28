@@ -1,6 +1,6 @@
 import init from './src/Context';
 import { controlTemplate, canvasTemplate } from './src/Controls';
-import { newBufferObject } from './src/BufferObject';
+import { newBuffer } from './src/BufferObject';
 import { newProgram, useSSQ } from './src/Program';
 import { getUniformBlock, getUniformBlocks, newUniformBuffer } from './src/UniformBlockHandler';
 import { mapAttributes } from './src/Attributes';
@@ -17,7 +17,7 @@ export {
     getUniformBlocks,
     init,
     mapAttributes,
-    newBufferObject,
+    newBuffer,
     newProgram,
     newUniformBuffer,
     obj,
