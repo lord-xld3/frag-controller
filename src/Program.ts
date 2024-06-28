@@ -46,7 +46,7 @@ export function useSSQ(gl: WebGL2RenderingContext, frag: string): [WebGLProgram,
     
     gl.useProgram(p);
     
-    v.bind();
+    v();
     newBuffer(gl, 48, 0x8892, 0x88E4)(new Float32Array([
         -1,-1,
         1,-1,
@@ -60,13 +60,12 @@ export function useSSQ(gl: WebGL2RenderingContext, frag: string): [WebGLProgram,
             { name: 'a', size: 2 }
         ]
     )
-    v.unbind();
 
     return [
         p, 
         function () {
             gl.useProgram(p);
-            v.bind();
+            v();
             gl.drawArrays(0x0004, 0, 6); 
         }
     ]

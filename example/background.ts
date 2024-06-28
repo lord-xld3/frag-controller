@@ -12,8 +12,7 @@ export default async function loadBackground() {
     let frag = await fetch('./shaders/background.fs').then((res) => res.text());
     let [program, draw] = gluu.useSSQ(gl, frag);
 
-    const [ISize] = gluu.getUniformBlock(gl, program, 'U');
-    const base = gluu.newUniformBuffer(gl, ISize);
+    const base = gluu.newUniformBuffer(gl, gluu.getUniformBlock(gl, program, 'U').size);
     base(new Float32Array([
         0, 0, // mouse
         0, 0, // resolution
@@ -40,11 +39,11 @@ export default async function loadBackground() {
 
     let upfunc = (e: PointerEvent) => {
         ec = ec.filter((p)=>p.pointerId !== e.pointerId);
-        if (ec.length < 2) pd = 0;
         canvas.releasePointerCapture(e.pointerId);
+        if (ec.length < 2) pd = 0;
     };
 
-    gluu.obj(canvas, {
+    Object.assign(canvas, {
         className: 'canvas-element fixed-canvas',
         id: 'canvas-background',
         onpointerdown: (e: PointerEvent) => {
@@ -54,17 +53,15 @@ export default async function loadBackground() {
             }
         },
         onpointermove: (e: PointerEvent) => {
-            let f = ec.findIndex(ev => ev.pointerId === e.pointerId);
-            ec[f] = e;
+            ec[ec.findIndex(p => p.pointerId === e.pointerId)] = e;
             if (ec.length === 1) {
-                base(new Float32Array([e.clientX*W - 1, e.clientY*H - 1,]));
+                base(new Float32Array([e.offsetX*W - 1, e.offsetY*H - 1]));
             }
-            if (ec.length === 2 && e.isPrimary) {
+            else if (ec.length === 2 && e.isPrimary) {
                 const [e1, e2] = ec;
                 const d = Math.hypot(e1.clientX - e2.clientX, e1.clientY - e2.clientY);
-                if (pd) {
-                    setZoom(z = Math.max(z + (d - pd) * z*H*m * 2, .5));
-                }
+                if (pd === 0) return pd = d;
+                base(new Float32Array([z = Math.max(z + (d - pd) * z * H * 4, .01)]), 12);
                 pd = d;
             }
         },
@@ -78,7 +75,7 @@ export default async function loadBackground() {
         setZoom(z = Math.max(z - e.deltaY * z*H*m *.5, .5));
     }, { passive: false });
 
-    const box = gluu.obj(document.createElement('div'), {
+    const box = Object.assign(document.createElement('div'), {
         className: 'canvas-box',
         id: `background-box`,
         ondblclick: () => {
@@ -87,7 +84,7 @@ export default async function loadBackground() {
     });
 
     
-    const fs = gluu.obj(document.createElement('button'), {
+    const fs = Object.assign(document.createElement('button'), {
         className: 'fullscreen-button',
         id: `background-fullscreen`,
         textContent: 'Fullscreen',

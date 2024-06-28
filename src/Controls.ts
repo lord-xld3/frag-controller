@@ -1,4 +1,4 @@
-import { obj } from "./Types";
+
 
 export function controlTemplate(
     control: HTMLInputElement,
@@ -6,11 +6,11 @@ export function controlTemplate(
 ) {
     const controlID = control.id;
     
-    const container = obj(document.createElement('div'), {
+    const container = Object.assign(document.createElement('div'), {
         className: 'panel-control',
         id: `${controlID}-container`,
     });
-    const tooltip = obj(document.createElement('span'), { 
+    const tooltip = Object.assign(document.createElement('span'), { 
         className: 'input-tooltip', 
         id: `${controlID}-tooltip`,
         textContent: control.value,
@@ -21,7 +21,7 @@ export function controlTemplate(
     });
 
     container.append(
-        obj(document.createElement('label'), {
+        Object.assign(document.createElement('label'), {
             className: 'control-label',
             id: `${controlID}-label`, 
             textContent: label,
@@ -43,19 +43,19 @@ export function canvasTemplate(
 
     
 
-    obj(canvas, {
+    Object.assign(canvas, {
         className: 'canvas-element',
         id: id,
     });
 
-    const box = obj(document.createElement('div'), {
+    const box = Object.assign(document.createElement('div'), {
         className: 'canvas-box',
         id: `${id}-box`
     })
 
     box.append(canvas)
 
-    const container = obj(document.createElement('div'), {
+    const container = Object.assign(document.createElement('div'), {
         className: 'canvas-container',
         id: `${id}-container`,
     });
@@ -65,11 +65,11 @@ export function canvasTemplate(
     }, {passive: false})
 
     if (content) {
-        const panel = obj(document.createElement('div'), {
+        const panel = Object.assign(document.createElement('div'), {
             className: 'canvas-panel',
             id: `${id}-panel`,
         });
-        const fs = obj(document.createElement('button'), {
+        const fs = Object.assign(document.createElement('button'), {
             className: 'fullscreen-button',
             id: `${id}-fullscreen`,
             textContent: 'Fullscreen',
@@ -83,7 +83,7 @@ export function canvasTemplate(
         });
         let i = 0;
         const upfunc = () => {i = 0;}
-        obj(box, { 
+        Object.assign(box, { 
             ondblclick: (e: MouseEvent) => {
                 e.preventDefault();
                 panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
@@ -101,7 +101,7 @@ export function canvasTemplate(
     }
     
     container.append(
-        obj(document.createElement('span'), {
+        Object.assign(document.createElement('span'), {
             className: 'canvas-caption',
             id: `${id}-caption`,
             textContent: caption

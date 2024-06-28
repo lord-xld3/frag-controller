@@ -15,8 +15,7 @@ export default async function loadMandelbrot() {
     // In this usage, we let the user update the devicePixelRatio, so we don't get the dpr from the "true size".
     let dpr = window.devicePixelRatio;
 
-    const [ISize] = gluu.getUniformBlock(gl, program, 'U');
-    const base = gluu.newUniformBuffer(gl, ISize);
+    const base = gluu.newUniformBuffer(gl, gluu.getUniformBlock(gl, program, 'U').size);
     base(new Uint32Array([80, 400]))
     base(new Float32Array([
         // Escape
@@ -40,7 +39,7 @@ export default async function loadMandelbrot() {
         base(new Float32Array([w, h]), 16)
     }
 
-    const controlDPR = gluu.obj(document.createElement('input'), {
+    const controlDPR = Object.assign(document.createElement('input'), {
         type: 'range',
         id: 'dpr',
         step: (dpr*.25).toString(),
@@ -57,7 +56,7 @@ export default async function loadMandelbrot() {
         }
     });
 
-    const controlZoom = gluu.obj(document.createElement('input'), {
+    const controlZoom = Object.assign(document.createElement('input'), {
         type: 'range',
         id: 'zoom',
         step: "1e-4",
@@ -71,7 +70,7 @@ export default async function loadMandelbrot() {
         }
     })
 
-    const controlMinIter = gluu.obj(document.createElement('input'), {
+    const controlMinIter = Object.assign(document.createElement('input'), {
         type: 'range',
         id: 'minIter',
         step: "1",
@@ -85,7 +84,7 @@ export default async function loadMandelbrot() {
         }
     })
 
-    const controlMaxIter = gluu.obj(document.createElement('input'), {
+    const controlMaxIter = Object.assign(document.createElement('input'), {
         type: 'range',
         id: 'maxIter',
         step: "1",
@@ -99,7 +98,7 @@ export default async function loadMandelbrot() {
         }
     })
 
-    const controlEscapeMin = gluu.obj(document.createElement('input'), {
+    const controlEscapeMin = Object.assign(document.createElement('input'), {
         type: 'range',
         id: 'minEscape',
         step: "1e-4",
@@ -113,7 +112,7 @@ export default async function loadMandelbrot() {
         }
     })
 
-    const controlEscapeMax = gluu.obj(document.createElement('input'), {
+    const controlEscapeMax = Object.assign(document.createElement('input'), {
         type: 'range',
         id: 'maxEscape',
         step: "1e-4",
@@ -126,7 +125,7 @@ export default async function loadMandelbrot() {
         }
     })
 
-    const controlHue = gluu.obj(document.createElement('input'), {
+    const controlHue = Object.assign(document.createElement('input'), {
         type: 'range',
         id: 'hue',
         step: "1e-4",
@@ -141,7 +140,7 @@ export default async function loadMandelbrot() {
         }
     })
 
-    const controlColorScale = gluu.obj(document.createElement('input'), {
+    const controlColorScale = Object.assign(document.createElement('input'), {
         type: 'range',
         id: 'colorScale',
         step: "1e-4",
@@ -168,7 +167,7 @@ export default async function loadMandelbrot() {
         canvas.releasePointerCapture(e.pointerId);
     };
 
-    gluu.obj(canvas, {
+    Object.assign(canvas, {
         onpointerdown: (e: PointerEvent) => {
             ec.push(e);
             if (ec.length === 1) {
@@ -176,16 +175,15 @@ export default async function loadMandelbrot() {
             }
         },
         onpointermove: (e: PointerEvent) => {
-            let f = ec.findIndex(ev => ev.pointerId === e.pointerId);
-            ec[f] = e;
+            ec[ec.findIndex(ev => ev.pointerId === e.pointerId)] = e;
             if (ec.length === 1) {
                 dx -= e.movementX * m * H,
                 dy += e.movementY * m * H;
                 base(new Float32Array([dx, dy]), 24);
             }
-            if (ec.length === 2 && e.isPrimary) {
+            else if (ec.length === 2 && e.isPrimary) {
                 const [e1, e2] = ec;
-                const d = Math.hypot(e1.clientX - e2.clientX, e1.clientY - e2.clientY);
+                const d = Math.hypot(e1.offsetX - e2.offsetX, e1.offsetY - e2.offsetY);
                 if (pd) {
                     setZoom(z += (d - pd) * H * 2);
                 }

@@ -1,4 +1,3 @@
-import { obj } from "./Types";
 
 /**
  * 
@@ -12,7 +11,7 @@ export function newBuffer(
     size: number,
     target: number, 
     usage: number, 
-) {
+): BufferObject {
     const buf = gl.createBuffer()!;
     if (!buf) console.warn(`Failed to create BufferObject.`);
 
@@ -21,8 +20,7 @@ export function newBuffer(
     bind();
     gl.bufferData(target, size, usage);
     
-    return obj((
-        /**doc test */
+    return Object.assign((
         data: ArrayBufferView, 
         dstByteOffset: number = 0,
         srcOffset: number = 0,
@@ -33,3 +31,17 @@ export function newBuffer(
         bind,
     })
 };
+
+export interface BufferObject {
+    /** Set data of buffer 
+     * @param data
+     * @param dstByteOffset
+     * @param srcOffset
+     * @param length
+    */
+    (data: ArrayBufferView, dstByteOffset?: number, srcOffset?: number, length?: number): void
+    /** WebGLBuffer */
+    buf: WebGLBuffer;
+    /** Bind buffer */
+    bind: () => void;
+}
