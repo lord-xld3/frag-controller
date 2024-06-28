@@ -1,1 +1,0 @@
-sudo cp -r * /var/www/html && sudo systemctl reload nginx
