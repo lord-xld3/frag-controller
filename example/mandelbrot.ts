@@ -40,7 +40,7 @@ export default async function loadMandelbrot() {
         base.set(new Float32Array([w, h]), 16)
     }
 
-    const controlDPR = Object.assign(document.createElement('input'), {
+    const controlDPR = gluu.obj(document.createElement('input'), {
         type: 'range',
         id: 'dpr',
         step: (dpr*.25).toString(),
@@ -57,7 +57,7 @@ export default async function loadMandelbrot() {
         }
     });
 
-    const controlZoom = Object.assign(document.createElement('input'), {
+    const controlZoom = gluu.obj(document.createElement('input'), {
         type: 'range',
         id: 'zoom',
         step: "1e-4",
@@ -71,7 +71,7 @@ export default async function loadMandelbrot() {
         }
     })
 
-    const controlMinIter = Object.assign(document.createElement('input'), {
+    const controlMinIter = gluu.obj(document.createElement('input'), {
         type: 'range',
         id: 'minIter',
         step: "1",
@@ -85,7 +85,7 @@ export default async function loadMandelbrot() {
         }
     })
 
-    const controlMaxIter = Object.assign(document.createElement('input'), {
+    const controlMaxIter = gluu.obj(document.createElement('input'), {
         type: 'range',
         id: 'maxIter',
         step: "1",
@@ -99,7 +99,7 @@ export default async function loadMandelbrot() {
         }
     })
 
-    const controlEscapeMin = Object.assign(document.createElement('input'), {
+    const controlEscapeMin = gluu.obj(document.createElement('input'), {
         type: 'range',
         id: 'minEscape',
         step: "1e-4",
@@ -113,7 +113,7 @@ export default async function loadMandelbrot() {
         }
     })
 
-    const controlEscapeMax = Object.assign(document.createElement('input'), {
+    const controlEscapeMax = gluu.obj(document.createElement('input'), {
         type: 'range',
         id: 'maxEscape',
         step: "1e-4",
@@ -126,7 +126,7 @@ export default async function loadMandelbrot() {
         }
     })
 
-    const controlHue = Object.assign(document.createElement('input'), {
+    const controlHue = gluu.obj(document.createElement('input'), {
         type: 'range',
         id: 'hue',
         step: "1e-4",
@@ -141,7 +141,7 @@ export default async function loadMandelbrot() {
         }
     })
 
-    const controlColorScale = Object.assign(document.createElement('input'), {
+    const controlColorScale = gluu.obj(document.createElement('input'), {
         type: 'range',
         id: 'colorScale',
         step: "1e-4",
@@ -168,7 +168,7 @@ export default async function loadMandelbrot() {
         canvas.releasePointerCapture(e.pointerId);
     };
 
-    Object.assign(canvas, {
+    gluu.obj(canvas, {
         onpointerdown: (e: PointerEvent) => {
             ec.push(e);
             if (ec.length === 1) {

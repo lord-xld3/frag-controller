@@ -43,7 +43,7 @@ export default async function loadBackground() {
         canvas.releasePointerCapture(e.pointerId);
     };
 
-    Object.assign(canvas, {
+    gluu.obj(canvas, {
         className: 'canvas-element fixed-canvas',
         id: 'canvas-background',
         onpointerdown: (e: PointerEvent) => {
@@ -77,14 +77,16 @@ export default async function loadBackground() {
         setZoom(z = Math.max(z - e.deltaY * z*H*m *.5, .5));
     }, { passive: false });
 
-    const box = Object.assign(document.createElement('div'), {
+    const box = gluu.obj(document.createElement('div'), {
         className: 'canvas-box',
         id: `background-box`,
         ondblclick: () => {
             fs.style.display = fs.style.display === 'none' ? 'flex' : 'none';
         }
     });
-    const fs = Object.assign(document.createElement('button'), {
+
+    
+    const fs = gluu.obj(document.createElement('button'), {
         className: 'fullscreen-button',
         id: `background-fullscreen`,
         textContent: 'Fullscreen',
@@ -99,7 +101,7 @@ export default async function loadBackground() {
 
     box.append(canvas, fs);
     document.body.prepend(box);
-
+  
     // Resize listener.
     window.addEventListener('resize', () => {
         const [w, h] = resizeCanvas();

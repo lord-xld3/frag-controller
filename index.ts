@@ -6,6 +6,8 @@ import { getUniformBlock, getUniformBlocks, newUniformBuffer } from './src/Unifo
 import { mapAttributes } from './src/Attributes';
 import { adjustHue, adjustNonZeroHue } from './src/Hue'
 
+import { obj } from './src/Types';
+
 export {
     adjustHue,
     adjustNonZeroHue,
@@ -18,5 +20,6 @@ export {
     newBufferObject,
     newProgram,
     newUniformBuffer,
+    obj,
     useSSQ,
 };
