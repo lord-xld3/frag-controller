@@ -1,0 +1,222 @@
+.canvas-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.canvas-caption {
+    margin: 0;
+    padding: 1%;
+    text-align: center;
+    user-select: none;
+    position: relative;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.canvas-box {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#background-box {
+    position: absolute;
+}
+
+/* Canvas styling */
+.canvas-element {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: all-scroll;
+    touch-action: none;
+}
+
+.fixed-canvas {
+    position: fixed;
+}
+
+/* Panel styling */
+.canvas-panel {
+    background-color: rgba(0, 0, 0, 0.75);
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0;
+    overflow-y: auto;
+}
+
+/* Overlay styling */
+.panel-control {
+    height: 100%;
+    color: white;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    padding: 2%
+}
+
+/* Overlay label styling */
+.control-label {
+    user-select: none;
+    padding: 1% 0;
+}
+
+/* Tooltip styling */
+.input-tooltip {
+    user-select: none;
+    position: absolute;
+    display: none;
+    padding: 0.5vh;
+    background-color: rgba(0, 0, 0, 0.75);
+    text-align: end;
+    color: white;
+    right: 2%;
+}
+
+.fullscreen-button {
+    padding: 2%;
+    background: linear-gradient(to bottom right, rgb(0, 57, 83), rgb(36, 0, 77));
+    border-style: outset;
+    color: white;
+    user-select: none;
+}
+
+#background-fullscreen {
+    position: fixed;
+    right: 0;
+    z-index: 1;
+}
+
+/* Tooltip visibility on input hover or active */
+input:active, input:hover + .input-tooltip {
+    display: block;
+}
+
+/* Range input common styling */
+input[type="range"] {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    background: #fff0;
+    overflow: hidden;
+    position: relative;
+    color: #ef233c;
+    --thumb-height: 100%;
+    --track-height: 10%;
+    --track-color: rgba(0, 0, 0, 0.1);
+    --brightness-hover: 180%;
+    --brightness-down: 80%;
+    --clip-edges: 0.125em;
+    transition: all ease 100ms;
+}
+
+input[type="range"].win10-thumb {
+    color: #2b2d42;
+    --thumb-height: 1.375em;
+    --thumb-width: 0.5em;
+    --clip-edges: 0.0125em;
+}
+
+/* Dark mode styling */
+@media (prefers-color-scheme: dark) {
+    html {
+        background-color: #000;
+    }
+
+    html::before {
+        background: radial-gradient(circle at center, #101112, #000);
+    }
+
+    input[type="range"] {
+        color: #b700ff;
+        --track-color: rgba(255, 255, 255, 0.1);
+    }
+
+    input[type="range"].win10-thumb {
+        color: #3a86ff;
+    }
+}
+
+/* Range input hover, active, and disabled states */
+input[type="range"]:hover {
+    cursor: grab;
+}
+
+input[type="range"]:active {
+    cursor: grabbing;
+}
+
+input[type="range"]:disabled {
+    filter: grayscale(1);
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* WebKit specific styles */
+input[type="range"],
+input[type="range"]::-webkit-slider-runnable-track,
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    width: 0.5rem;
+    height: 1rem;
+    background-color: currentColor;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+    background: linear-gradient(var(--track-color) 0 0) scroll no-repeat center / 100% calc(var(--track-height) + 1px);
+}
+
+input[type="range"]:disabled::-webkit-slider-thumb {
+    cursor: not-allowed;
+}
+
+/* Firefox specific styles */
+input[type="range"]::-moz-range-thumb {
+    width: 0.5rem;
+    height: 1rem;
+    border-radius: 0;
+    border-width: 0;
+    background-color: currentColor;
+}
+
+input[type="range"]::-moz-range-track {
+    background: linear-gradient(var(--track-color) 0 0) scroll no-repeat center / 100% calc(var(--track-height) + 1px);
+}
+
+/* Edge specific styles */
+input[type="range"]::-ms-track {
+    background: transparent;
+    border-color: transparent;
+    color: transparent;
+    width: 100%;
+    height: var(--track-height);
+    border-radius: 0.5rem;
+}
+
+input[type="range"]::-ms-fill-lower,
+input[type="range"]::-ms-fill-upper {
+    background: currentColor;
+}
+
+input[type="range"]::-ms-thumb {
+    width: 0.5rem;
+    height: 1rem;
+    background-color: currentColor;
+    border: none;
+    border-radius: 0.5rem;
+}
+
+input[type="range"]::-ms-tooltip {
+    display: none;
+}

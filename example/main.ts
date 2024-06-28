@@ -1,3 +1,5 @@
-import main from "./mandelbrot";
+import loadBackground from "./background";
+import loadMandelbrot from "./mandelbrot";
 
-main();
+loadMandelbrot();
+loadBackground();

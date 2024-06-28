@@ -11,7 +11,10 @@ module.exports = {
     entry: {
         main: [
             './main.ts', 
-            './styles.css',
+            './main.css',
+            './favicon.ico',
+            './shaders/background.fs',
+            './shaders/mandelbrot.fs',
         ],
     },
     output: {
@@ -22,10 +25,12 @@ module.exports = {
         rules: [
             {
                 test: /\.css$/,
+                exclude: /node_modules/,
                 use: [MiniCssExtractPlugin.loader, 'css-loader'],
             },
             {
-                test: /\.(png|svg|jpg|gif|webp|frag|vert|sh)$/,
+                test: /\.(png|svg|jpg|gif|webp|sh|ico)$/,
+                exclude: /node_modules/,
                 use: {
                     loader: 'file-loader',
                     options: {
@@ -34,14 +39,32 @@ module.exports = {
                 },
             },
             {
-                test: /\.tsx?$/,
-                use: 'ts-loader',
+                test: /\.(glsl|vs|fs|vert|frag)$/,
                 exclude: /node_modules/,
+                use: [
+                    {
+                        loader: 'file-loader',
+                        options: {
+                            name: '[path][name].[ext]',
+                        },
+                    },
+                    {
+                        loader: 'webpack-glsl-minify',
+                        options: {
+                            output: 'sourceOnly',
+                        },
+                    }
+                ]
+            },
+            {
+                test: /\.tsx?$/,
+                exclude: /node_modules/,
+                use: 'ts-loader',
             },
         ],
     },
     resolve: {
-        extensions: ['.tsx', '.ts', '.js'],
+        extensions: ['.tsx', '.ts', '.js', '.css', '.glsl', '.vs', '.fs', '.vert', '.frag'],
     },
     plugins: [
         new HtmlWebpackPlugin({
@@ -54,15 +77,25 @@ module.exports = {
                 removeStyleLinkTypeAttributes: true,
                 useShortDoctype: true,
             },
+            favicon: './favicon.ico',
         }),
         new MiniCssExtractPlugin({
-            filename: 'style.css', // Specify the name for the generated CSS file
+            filename: 'main.css', // Specify the name for the generated CSS file
         }),
         new BundleAnalyzerPlugin(),
     ],
     optimization: {
         minimizer: [
-            new TerserPlugin(),
+            new TerserPlugin({
+                terserOptions: {
+                    compress: {
+                        drop_console: true, // Removes console.* calls
+                        keep_fargs: false, // Removes unused function arguments
+                        keep_infinity: true, // Keeps the keyword infinity
+                        unsafe: true, // Apply Terser's unsafe optimizations
+                    },
+                },
+            }),
             new CssMinimizerPlugin(),
         ],
     },
