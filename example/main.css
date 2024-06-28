@@ -2,7 +2,6 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    margin: 2% 2;
 }
 
 .canvas-caption {
@@ -18,6 +17,10 @@
     position: relative;
     width: 100%;
     height: 100%;
+}
+
+#background-box {
+    position: absolute;
 }
 
 /* Canvas styling */
@@ -78,33 +81,17 @@
 }
 
 .fullscreen-button {
-    width: min-content;
-    height: min-content;
-    cursor: pointer;
-    background-color: rgba(0, 0, 0, 0);
-    display: block;
-    border-style: none;
-    padding: 1vh;
+    padding: 2%;
+    background: linear-gradient(to bottom right, rgb(0, 57, 83), rgb(36, 0, 77));
+    border-style: outset;
+    color: white;
+    user-select: none;
 }
 
-.fullscreen-container:hover .tooltip {
-    display: block;
-}
-
-.fullscreen-container {
-    display: flex;
-    position: relative;
-    width: min-content;
-    height: min-content;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: baseline;
-}
-
-.fullscreen-tooltip {
-    position: relative;
-    margin: 0;
+#background-fullscreen {
+    position: fixed;
     right: 0;
+    z-index: 1;
 }
 
 /* Tooltip visibility on input hover or active */

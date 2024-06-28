@@ -71,15 +71,34 @@ export default async function loadBackground() {
         onpointerleave: upfunc,
         onpointerout: upfunc,
         onpointerup: upfunc,
-    })
-
+    });
     canvas.addEventListener('wheel', (e) => {
         e.preventDefault();
         setZoom(z = Math.max(z - e.deltaY * z*H*m *.5, .5));
     }, { passive: false });
-    
-    
-    document.body.prepend(canvas);
+
+    const box = Object.assign(document.createElement('div'), {
+        className: 'canvas-box',
+        id: `background-box`,
+        ondblclick: () => {
+            fs.style.display = fs.style.display === 'none' ? 'flex' : 'none';
+        }
+    });
+    const fs = Object.assign(document.createElement('button'), {
+        className: 'fullscreen-button',
+        id: `background-fullscreen`,
+        textContent: 'Fullscreen',
+        onclick: () => {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                box.requestFullscreen();
+            }
+        },
+    });
+
+    box.append(canvas, fs);
+    document.body.prepend(box);
 
     // Resize listener.
     window.addEventListener('resize', () => {

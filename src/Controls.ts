@@ -67,6 +67,18 @@ export function canvasTemplate(
             className: 'canvas-panel',
             id: `${id}-panel`,
         });
+        const fs = Object.assign(document.createElement('button'), {
+            className: 'fullscreen-button',
+            id: `${id}-fullscreen`,
+            textContent: 'Fullscreen',
+            onclick: () => {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    box.requestFullscreen();
+                }
+            }
+        });
         let i = 0;
         const upfunc = () => {i = 0;}
         Object.assign(box, { 
@@ -82,7 +94,7 @@ export function canvasTemplate(
             onpointerout: upfunc,
             onpointerleave: upfunc,
         })
-        panel.append(...content);
+        panel.append(fs, ...content);
         box.append(panel);
     }
     
