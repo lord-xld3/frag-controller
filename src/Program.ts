@@ -2,8 +2,6 @@ import newVAO from "./VertexArrayObject";
 import { newBufferObject } from "./BufferObject";
 import { mapAttributes } from "./Attributes";
 
-export const shaderCache = new Map<string, WebGLShader>();
-
 /**
  * Creates a new program from a vertex and fragment shader.
  * @param gl - The WebGL2RenderingContext.
@@ -13,16 +11,12 @@ export const shaderCache = new Map<string, WebGLShader>();
  */
 export function newProgram(gl: WebGL2RenderingContext, vert: string, frag: string) {
     function compileShader(type: number, source: string) {
-        if (shaderCache.has(source)) return shaderCache.get(source)!;
-    
         const shader = gl.createShader(type)!;
         gl.shaderSource(shader, source);
         gl.compileShader(shader);
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
             throw new Error(gl.getShaderInfoLog(shader)!);
         }
-    
-        shaderCache.set(source, shader);
         return shader;
     };
 

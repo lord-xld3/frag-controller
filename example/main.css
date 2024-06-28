@@ -1,34 +1,11 @@
-/* General reset and full-screen settings */
-body, html {
-    margin: 0;
-    padding: 0;
-    overflow-y: visible;
-    width: 100%;
-    height: 100%;
-    box-sizing: border-box;
-    color: white;
-    background-color: #000;
-    user-select: none;
-}
-
-h1 {
-    display: block;
-    width: min-content;
-    height: min-content;
-    position: relative;
-    font-size: xx-large;
-    margin-left: 10%;
-}
-
-.canvascontainer {
+.canvas-container {
     display: flex;
     flex-direction: column;
-    width: 80%;
-    height: 80%;
-    margin: 2% 10%;
+    width: 100%;
+    margin: 2% 2;
 }
 
-.canvascaption {
+.canvas-caption {
     margin: 0;
     padding: 1%;
     text-align: center;
@@ -37,14 +14,14 @@ h1 {
     background-color: rgba(0, 0, 0, 0.8);
 }
 
-.canvasbox {
+.canvas-box {
     position: relative;
     width: 100%;
     height: 100%;
 }
 
 /* Canvas styling */
-canvas {
+.canvas-element {
     width: 100%;
     height: 100%;
     display: block;
@@ -52,64 +29,44 @@ canvas {
     touch-action: none;
 }
 
-#background {
+.fixed-canvas {
     position: fixed;
 }
 
 /* Panel styling */
-#panel {
+.canvas-panel {
     background-color: rgba(0, 0, 0, 0.75);
     position: absolute;
     top: 0;
     right: 0;
     width: 50%;
-    height: 50%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 1.5%;
+    padding: 0;
     overflow-y: auto;
 }
 
-#overlay-header {
-    font-size: small;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    height: min-content;
-    margin-bottom: 2%;
-}
-
 /* Overlay styling */
-.control {
+.panel-control {
     height: 100%;
     color: white;
     position: relative;
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
-}
-
-/* Overlay info styling */
-#overlay-info {
-    user-select: none;
-    height: min-content;
-    width: 100%;
-}
-
-#overlay-info ul {
-    padding: 0;
-    margin: 0 0 0 20px;
+    padding: 2%
 }
 
 /* Overlay label styling */
-.control label {
+.control-label {
     user-select: none;
     padding: 1% 0;
 }
 
 /* Tooltip styling */
-.tooltip {
+.input-tooltip {
     user-select: none;
     position: absolute;
     display: none;
@@ -144,10 +101,6 @@ canvas {
     align-items: baseline;
 }
 
-#bg-fullscreen-container {
-    width: 100%;
-}
-
 .fullscreen-tooltip {
     position: relative;
     margin: 0;
@@ -155,7 +108,7 @@ canvas {
 }
 
 /* Tooltip visibility on input hover or active */
-input[type="range"]:active, input[type="range"]:hover + .tooltip {
+input:active, input:hover + .input-tooltip {
     display: block;
 }
 

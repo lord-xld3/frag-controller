@@ -6,7 +6,7 @@ precision highp float;
 
 out vec4 o;
 
-uniform I {
+uniform U {
     vec2 M, R;
     // force time to be highp float
     highp float T, Z;
@@ -21,8 +21,9 @@ void main() {
         B = sin(A),
         C = cos(A);
         
-    // rotate, zoom +- mouse.y
-    f *= mat2(C, B, -B, C) * (3. + .5*sin(T) + M.y)/Z;
+    // this transform is pretty cool
+    f = mix(f, f*cos(fract(abs(f)))/(.5+(.5*G)), .5 + .5*sin(T) + N)
+    * mat2(C, B, -B, C) * (3. + .5*sin(T) + M.y)/Z; // rotate, zoom +- mouse.y
     
     // wave
     float W = T + abs(f.x * f.y) + sin(cos(T) * dot(f, f)),
