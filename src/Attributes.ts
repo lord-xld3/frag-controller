@@ -1,9 +1,8 @@
-
 /**
  * Maps vertex attributes to a program.
- * @param gl - The WebGL2RenderingContext.
- * @param program - The WebGLProgram.
- * @param attributes - The attributes to map.
+ * @param gl - WebGL2Context
+ * @param program - WebGLProgram
+ * @param attributes - Attributes to map.
  * @example mapAttributes(gl, program, [
  * { name: 'a_position', size: 2 },
  * { name: 'a_uv', size: 2 },

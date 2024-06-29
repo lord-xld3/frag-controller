@@ -40,9 +40,6 @@ export function canvasTemplate(
     caption: string,
     ...content: HTMLElement[]
 ) {
-
-    
-
     Object.assign(canvas, {
         className: 'canvas-element',
         id: id,
@@ -69,6 +66,7 @@ export function canvasTemplate(
             className: 'canvas-panel',
             id: `${id}-panel`,
         });
+
         const fs = Object.assign(document.createElement('button'), {
             className: 'fullscreen-button',
             id: `${id}-fullscreen`,
@@ -81,6 +79,7 @@ export function canvasTemplate(
                 }
             }
         });
+
         let i = 0;
         const upfunc = () => {i = 0;}
         Object.assign(box, { 
@@ -89,13 +88,14 @@ export function canvasTemplate(
                 panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
             },
             onpointerdown: () => {
-                if (i++ === 3) panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+                if (++i === 3) panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
             },
             onpointercancel: upfunc,
             onpointerup: upfunc,
             onpointerout: upfunc,
             onpointerleave: upfunc,
         })
+        
         panel.append(fs, ...content);
         box.append(panel);
     }

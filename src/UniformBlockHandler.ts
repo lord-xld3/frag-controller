@@ -1,6 +1,6 @@
 import { newBuffer, BufferObject } from "./BufferObject";
 
-interface UniformBlock {
+type UniformBlock = {
     /**
      * Binds the uniform block index to a binding point. Default: 0
      */
@@ -45,12 +45,13 @@ export function getUniformBlock(
 
 /**
  * Returns the max size of all uniform blocks and a function to bind them to a binding point. Also binds on call.
+ * @param gl - WebGLContext
  * @param blocks - Array of [WebGLProgram, blockNames[]].
  * @param binding - The binding point to bind the uniform blocks to. (Default: 0)
  * @note The purpose of this function is to allow binding multiple uniform blocks to the same binding point.
  * The blocks can have different sizes, extra data is ignored in the shader program.
  * We need the max size to create buffer(s) that can hold all the blocks.
- * @example const [maxSize, bindUniformBlocks] = getUniformBlocks(
+ * @example const [maxSize, bindBlock] = getUniformBlocks(
  * gl, 
  * [
  * [program1, ['BlockName1', 'BlockName2']], 
@@ -61,55 +62,56 @@ export function getUniformBlocks(
     gl: WebGL2RenderingContext,
     blocks: [WebGLProgram, string[]][],
     binding: number = 0,
-) {
+): UniformBlock {
     let maxSize = 0,
-        blockInfo:[WebGLProgram, number[]][] = [];
+        blockInfo:[WebGLProgram, number[]][] = [],
+        i = 0,
+        j = 0;
 
-    for (let i = 0; i < blocks.length; i++) {
+    for (; i < blocks.length; i++) {
         const block = blocks[i],
             blockProgram = block[0],
-            indices: number[] = [];
-        for (let j = 0; j < block[1].length; j++) {
+            blockIndices: number[] = [];
+        for (; j < block[1].length; j++) {
             const blockIndex = gl.getUniformBlockIndex(blockProgram, block[1][j]);
             if (blockIndex === -1) {
                 console.warn(`Uniform block ${block[1][j]} not found in program.`);
                 continue;
             }
             maxSize = Math.max(maxSize, gl.getActiveUniformBlockParameter(blockProgram, blockIndex, gl.UNIFORM_BLOCK_DATA_SIZE));
-            indices.push(blockIndex);
+            blockIndices.push(blockIndex);
         }
         blockInfo.push([
             blockProgram,
-            indices,
+            blockIndices,
         ]);
     }
 
-    function bindUniformBlocks(binding: number = 0) {
-        for (let i = 0; i < blockInfo.length; i++) {
+    const bindBlock = (binding: number = 0) => {
+        for (i = 0; i < blockInfo.length; i++) {
             const block = blockInfo[i],
                 blockProgram = block[0],
-                indices = block[1];
-            for (let j = 0; j < indices.length; j++) {
-                gl.uniformBlockBinding(blockProgram, indices[j], binding);
+                blockIndices = block[1];
+            for (j = 0; j < blockIndices.length; j++) {
+                gl.uniformBlockBinding(blockProgram, blockIndices[j], binding);
             }
         }
     }
 
-    bindUniformBlocks(binding);
-    return [maxSize, bindUniformBlocks]
+    bindBlock(binding);
+    return Object.assign(bindBlock, {size: maxSize})
 }
 
-interface UniformBufferObject extends BufferObject {
+type UniformBufferObject = BufferObject & {
     /** Binds the buffer to a specified binding point. Default: 0 */
     bufferBinding: (binding?: number) => void;
 }
 
 /**
  * Creates, binds, and initializes a new uniform buffer object.
- * @param maxSize - The max size of the buffer which should be retrieved from getUniformBlock().
+ * @param gl - WebGL2Context
+ * @param maxSize - The max size of the buffer which should be retrieved from getUniformBlock().size.
  * @param binding - The binding point to bind the uniform buffer to. (Default: 0)
- * @param data - Data to initialize the buffer with.
- * @example const buffer = newUniformBuffer(gl, maxSize, new Uint32Array([1, 2, 3, 4]), 0);
  */
 export function newUniformBuffer(
     gl: WebGL2RenderingContext,

@@ -1,10 +1,23 @@
+export type BufferObject = {
+    /** Set data of buffer 
+     * @param data - Array to set.
+     * @param dstByteOffset - Destination offset in bytes.
+     * @param srcOffset - Source offset index.
+     * @param length - Source element length.
+    */
+    (data: ArrayBufferView, dstByteOffset?: number, srcOffset?: number, length?: number): void
+    /** WebGLBuffer */
+    buf: WebGLBuffer;
+    /** Bind buffer */
+    bindBuffer: () => void;
+}
 
 /**
- * 
- * @param gl 
- * @param target 
- * @param usage 
- * @param data 
+ * Initializes a new WebGLBuffer.
+ * @param gl - GL context
+ * @param size - Buffer size in bytes.
+ * @param target - GLenum
+ * @param usage - GLenum
  */
 export function newBuffer(
     gl: WebGL2RenderingContext, 
@@ -15,9 +28,9 @@ export function newBuffer(
     const buf = gl.createBuffer()!;
     if (!buf) console.warn(`Failed to create BufferObject.`);
 
-    const bind = () => gl.bindBuffer(target, buf);
+    const bindBuffer = () => gl.bindBuffer(target, buf);
 
-    bind();
+    bindBuffer();
     gl.bufferData(target, size, usage);
     
     return Object.assign((
@@ -28,20 +41,7 @@ export function newBuffer(
     ) => gl.bufferSubData(target, dstByteOffset, data, srcOffset, length), 
     {
         buf,
-        bind,
+        bindBuffer,
     })
 };
 
-export interface BufferObject {
-    /** Set data of buffer 
-     * @param data
-     * @param dstByteOffset
-     * @param srcOffset
-     * @param length
-    */
-    (data: ArrayBufferView, dstByteOffset?: number, srcOffset?: number, length?: number): void
-    /** WebGLBuffer */
-    buf: WebGLBuffer;
-    /** Bind buffer */
-    bind: () => void;
-}

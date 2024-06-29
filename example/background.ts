@@ -13,11 +13,12 @@ export default async function loadBackground() {
     let [program, draw] = gluu.useSSQ(gl, frag);
 
     const base = gluu.newUniformBuffer(gl, gluu.getUniformBlock(gl, program, 'U').size);
+
     base(new Float32Array([
-        0, 0, // mouse
-        0, 0, // resolution
-        0, // time
-        1 // zoom
+        0, 0, // mouse [0]
+        0, 0, // resolution [8]
+        0, // time [16]
+        1 // zoom [20]
     ]))
 
     function setZoom(z: number) {
@@ -46,10 +47,15 @@ export default async function loadBackground() {
     Object.assign(canvas, {
         className: 'canvas-element fixed-canvas',
         id: 'canvas-background',
+        ondblclick: () => {
+            fs.style.display = fs.style.display === 'none' ? 'flex' : 'none';
+        },
         onpointerdown: (e: PointerEvent) => {
             ec.push(e);
             if (ec.length === 1) {
                 canvas.setPointerCapture(e.pointerId)
+            } else if (ec.length === 3) {
+                fs.style.display = fs.style.display === 'none' ? 'flex' : 'none';
             }
         },
         onpointermove: (e: PointerEvent) => {
@@ -61,7 +67,7 @@ export default async function loadBackground() {
                 const [e1, e2] = ec;
                 const d = Math.hypot(e1.clientX - e2.clientX, e1.clientY - e2.clientY);
                 if (pd === 0) return pd = d;
-                base(new Float32Array([z = Math.max(z + (d - pd) * z * H * 4, .01)]), 12);
+                setZoom(z = Math.max(z + (d - pd) * z * H * 4, .01));
                 pd = d;
             }
         },
