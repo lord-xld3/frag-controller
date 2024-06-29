@@ -6,10 +6,10 @@ export type BufferObject = {
      * @param length - Source element length.
     */
     (data: ArrayBufferView, dstByteOffset?: number, srcOffset?: number, length?: number): void
-    /** WebGLBuffer */
-    buf: WebGLBuffer;
     /** Bind buffer */
     bindBuffer: () => void;
+    /** WebGLBuffer */
+    buf: WebGLBuffer;
 }
 
 /**
@@ -40,8 +40,8 @@ export function newBuffer(
         length?: number
     ) => gl.bufferSubData(target, dstByteOffset, data, srcOffset, length), 
     {
-        buf,
         bindBuffer,
+        buf,
     })
 };
 

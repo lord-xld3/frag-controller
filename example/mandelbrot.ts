@@ -36,6 +36,7 @@ export default async function loadMandelbrot() {
     }
 
     function setResolution(w: number, h: number) {
+        H = 2/canvas.clientHeight;
         base(new Float32Array([w, h]), 16)
     }
 
@@ -50,7 +51,6 @@ export default async function loadMandelbrot() {
             dpr = controlDPR.valueAsNumber;
             const [w, h] = resizeCanvas(dpr);
             resizeViewport(w, h);
-            H = 2/canvas.clientHeight;
             setResolution(w, h);
             requestAnimationFrame(render);
         }
@@ -232,7 +232,6 @@ export default async function loadMandelbrot() {
     window.addEventListener('resize', () => {
         const [w, h] = resizeCanvas(dpr);
         resizeViewport(w, h);
-        H = 2/canvas.clientHeight;
         setResolution(w, h);
         requestAnimationFrame(render);
     });

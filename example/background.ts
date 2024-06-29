@@ -9,36 +9,23 @@ export default async function loadBackground() {
         powerPreference: 'high-performance',
     });
 
-    let frag = await fetch('./shaders/background.fs').then((res) => res.text());
-    let [program, draw] = gluu.useSSQ(gl, frag);
+    const frag = await fetch('./shaders/background.fs').then((res) => res.text());
+    const [program, draw] = gluu.useSSQ(gl, frag);
 
     const base = gluu.newUniformBuffer(gl, gluu.getUniformBlock(gl, program, 'U').size);
-
     base(new Float32Array([
         0, 0, // mouse [0]
         0, 0, // resolution [8]
         0, // time [16]
         1 // zoom [20]
     ]))
-
-    function setZoom(z: number) {
-        m = Math.exp(-z);
-        base(new Float32Array([z]), 20);
-    }
-
-    function setResolution(w: number, h: number) {
-        [W, H] = [2/w, 2/h];
-        base(new Float32Array([W, H]), 8)
-    }
     
-    let W: number,
-        H: number,
+    let W: number, H: number,
         ec: PointerEvent[] = [], // event cache
         z = 1, // default zoom level
-        m = Math.exp(-z), // exp(-zoom)
         pd = 0; // previous distance between two pointers
 
-    let upfunc = (e: PointerEvent) => {
+    const upfunc = (e: PointerEvent) => {
         ec = ec.filter((p)=>p.pointerId !== e.pointerId);
         canvas.releasePointerCapture(e.pointerId);
         if (ec.length < 2) pd = 0;
@@ -61,13 +48,16 @@ export default async function loadBackground() {
         onpointermove: (e: PointerEvent) => {
             ec[ec.findIndex(p => p.pointerId === e.pointerId)] = e;
             if (ec.length === 1) {
-                base(new Float32Array([e.offsetX*W - 1, e.offsetY*H - 1]));
+                // offset 0,0 is top-left
+                // normalize to -1, 1
+                base(new Float32Array([e.offsetX*W - 1, -e.offsetY*H + 1]));
             }
             else if (ec.length === 2 && e.isPrimary) {
                 const [e1, e2] = ec;
-                const d = Math.hypot(e1.clientX - e2.clientX, e1.clientY - e2.clientY);
-                if (pd === 0) return pd = d;
-                setZoom(z = Math.max(z + (d - pd) * z * H * 4, .01));
+                const d = Math.hypot(e1.offsetX - e2.offsetX, e1.offsetY - e2.offsetY);
+                if (pd) {
+                    base(new Float32Array([z = Math.max(z + (d - pd) * H * 2, .5)]), 20);
+                }
                 pd = d;
             }
         },
@@ -78,7 +68,7 @@ export default async function loadBackground() {
     });
     canvas.addEventListener('wheel', (e) => {
         e.preventDefault();
-        setZoom(z = Math.max(z - e.deltaY * z*H*m *.5, .5));
+        base(new Float32Array([z = Math.max(z - e.deltaY * z*H *.5, .5)]), 20);
     }, { passive: false });
 
     const box = Object.assign(document.createElement('div'), {
@@ -88,7 +78,6 @@ export default async function loadBackground() {
             fs.style.display = fs.style.display === 'none' ? 'flex' : 'none';
         }
     });
-
     
     const fs = Object.assign(document.createElement('button'), {
         className: 'fullscreen-button',
@@ -110,7 +99,10 @@ export default async function loadBackground() {
     window.addEventListener('resize', () => {
         const [w, h] = resizeCanvas();
         resizeViewport(w, h);
-        setResolution(w, h);
+        // Mouse relies on client size, 
+        // canvas is normally client * devicepixelratio
+        W = 2/canvas.clientWidth, H = 2/canvas.clientHeight;
+        base(new Float32Array([2/w, 2/h]), 8)
     });
     window.dispatchEvent(new Event('resize'));
 
