@@ -88,7 +88,7 @@ export function canvasTemplate(
                 panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
             },
             onpointerdown: () => {
-                if (i++ === 3) panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+                if (++i === 3) panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
             },
             onpointercancel: upfunc,
             onpointerup: upfunc,
