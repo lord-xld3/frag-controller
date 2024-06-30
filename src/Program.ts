@@ -40,7 +40,7 @@ export function newProgram(gl: WebGL2RenderingContext, vert: string, frag: strin
  * @returns [Program, draw function()]
  * @example const [program, draw] = useSSQ(gl, `#version 300...`)
  */
-export function useSSQ(gl: WebGL2RenderingContext, frag: string): [WebGLProgram, DrawFunction] {
+export function useSSQ(gl: WebGL2RenderingContext, frag: string) {
     const p = newProgram(gl, `#version 300 es\nin vec2 a;void main(){gl_Position=vec4(a,0,1);}`, frag),
         v = newVAO(gl);
     
@@ -62,14 +62,18 @@ export function useSSQ(gl: WebGL2RenderingContext, frag: string): [WebGLProgram,
         ]
     )
 
-    return [
-        p, 
-        function () {
+    return Object.assign(
+        /**
+         * Draw the SSQ program.
+         */
+        () => {
             gl.useProgram(p);
             v();
             gl.drawArrays(0x0004, 0, 6); 
-        }
-    ]
+        }, 
+        /** Program */
+        { 
+            p 
+        } 
+    )
 };
-
-type DrawFunction = () => void;

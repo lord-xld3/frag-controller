@@ -8,14 +8,14 @@ export default function loadMandelbrot() {
         powerPreference: 'high-performance',
     });
 
-    let [program, draw] = gluu.useSSQ(gl, `#version 300 es
+    const draw = gluu.useSSQ(gl, `#version 300 es
 #define A  gl_FragCoord.xy
 precision highp float;out vec4 o;uniform U{uvec2 B;vec2 C,D,E;vec3 F;float G,H;};void main(){float I=1./(exp(G)*D.y),J=C.y*I+C.x;vec2 K=(A+A-D)*I+E,L=K,M=K*K;int N=0,O=int(float(B.y-B.x)*pow(G/12.,2.))+int(B.x);while(N<O&&M.x<J){K=vec2(M.x-M.y+L.x,2.*K.x*K.y+L.y);M=K*K;++N;}o=(N<O)?vec4(.5+.5*cos((float(N)+1.-log2(log2(dot(K,K))/log2(J)))*H+F),1):vec4(0);}`);
 
     // In this usage, we let the user update the devicePixelRatio, so we don't get the dpr from the "true size".
     let dpr = window.devicePixelRatio;
 
-    const uniformBlock = gluu.getUniformBlock(gl, program, 'U')
+    const uniformBlock = gluu.getUniformBlock(gl, draw.p, 'U')
     uniformBlock(0)
     const base = gluu.newUniformBuffer(gl, uniformBlock.size);
     base.bufferIndex(0)
@@ -218,20 +218,6 @@ precision highp float;out vec4 o;uniform U{uvec2 B;vec2 C,D,E;vec3 F;float G,H;}
         gluu.controlTemplate(controlColorScale, "Color Scale")
     ));
 
-    // Fullscreen button.
-    // const fullscreen = document.getElementById('mb-fullscreen') as HTMLButtonElement;
-    // fullscreen.onclick = () => {
-    //     if (document.fullscreenElement) {
-    //         document.exitFullscreen();
-    //         fullscreen.value = '🔳';
-    //     }
-    //     // Target root <html> element.
-    //     else {
-    //         container.requestFullscreen();
-    //         fullscreen.value = '🔲';
-    //     }
-    // };
-
     // Resize listener.
     window.addEventListener('resize', () => {
         const [w, h] = resizeCanvas(dpr);
@@ -242,13 +228,10 @@ precision highp float;out vec4 o;uniform U{uvec2 B;vec2 C,D,E;vec3 F;float G,H;}
     window.dispatchEvent(new Event('resize'));
 
     // Setup render loop.
-    gl.useProgram(program);
     gl.clearColor(0, 0, 0, 1);
 
     function render() {
         gl.clear(gl.COLOR_BUFFER_BIT);
-
-        // Draw a screen-space quad for the fragment shader.
         draw();
     }
     requestAnimationFrame(render);
