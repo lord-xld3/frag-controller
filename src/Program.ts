@@ -47,6 +47,7 @@ export function useSSQ(gl: WebGL2RenderingContext, frag: string): [WebGLProgram,
     gl.useProgram(p);
     
     v();
+    // Size 48 bytes, ARRAY_BUFFER, STATIC_DRAW
     newBuffer(gl, 48, 0x8892, 0x88E4)(new Float32Array([
         -1,-1,
         1,-1,

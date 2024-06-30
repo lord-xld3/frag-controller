@@ -1,6 +1,5 @@
 import * as gluu from '../index';
-
-export default async function loadBackground() {
+export default function loadBackground() {
     const canvas = document.createElement('canvas');
     const [gl, resizeViewport, resizeCanvas] = gluu.init(canvas, {
         alpha: false,
@@ -9,10 +8,15 @@ export default async function loadBackground() {
         powerPreference: 'high-performance',
     });
 
-    const frag = await fetch('./shaders/background.fs').then((res) => res.text());
-    const [program, draw] = gluu.useSSQ(gl, frag);
+    const [program, draw] = gluu.useSSQ(gl, `#version 300 es
+#define A  gl_FragCoord.xy
+precision highp float;out vec4 o;uniform U{vec2 B,C;highp float D,E;};void main(){vec2 F=A*C-1.;float G=length(F),H=dot(B,B),I=radians((sin(D)-B.x)*G*90.)-B.x,J=sin(I),K=cos(I);F=mix(F,F*cos(fract(abs(F)))/(.5+(.5*G)),.5+.5*sin(D)+H)*mat2(K,J,-J,K)*(3.+.5*sin(D)+B.y)/E;float L=D+abs(F.x*F.y)+sin(cos(D)*dot(F,F)),M=sin(3.*L+3.*H),N=1./fwidth(M),O=smoothstep(.5,2.,G);o=vec4((.5+.5*cos(L+H+vec3(0,2,4))-O)*(smoothstep(1.,-1.,(abs(M)-.5)*N)+smoothstep(3.,-3.,abs(M)))+smoothstep(1.,-1.,(M+.95)*N+O),1.);}`);
+    
+    const uniformBlock = gluu.getUniformBlock(gl, program, 'U')
+    uniformBlock(0)
+    const base = gluu.newUniformBuffer(gl, uniformBlock.size);
+    base.bufferIndex(0)
 
-    const base = gluu.newUniformBuffer(gl, gluu.getUniformBlock(gl, program, 'U').size);
     base(new Float32Array([
         0, 0, // mouse [0]
         0, 0, // resolution [8]
@@ -31,12 +35,30 @@ export default async function loadBackground() {
         if (ec.length < 2) pd = 0;
     };
 
+    const box = Object.assign(document.createElement('div'), {
+        className: 'canvas-box',
+        id: `background-box`,
+        ondblclick: () => {
+            fs.style.display = fs.style.display === 'none' ? 'flex' : 'none';
+        }
+    });
+
+    const fs = Object.assign(document.createElement('button'), {
+        className: 'fullscreen-button',
+        id: `background-fullscreen`,
+        textContent: 'Fullscreen',
+        onclick: () => {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                box.requestFullscreen();
+            }
+        },
+    });
+
     Object.assign(canvas, {
         className: 'canvas-element fixed-canvas',
         id: 'canvas-background',
-        ondblclick: () => {
-            fs.style.display = fs.style.display === 'none' ? 'flex' : 'none';
-        },
         onpointerdown: (e: PointerEvent) => {
             ec.push(e);
             if (ec.length === 1) {
@@ -70,27 +92,6 @@ export default async function loadBackground() {
         e.preventDefault();
         base(new Float32Array([z = Math.max(z - e.deltaY * z*H *.5, .5)]), 20);
     }, { passive: false });
-
-    const box = Object.assign(document.createElement('div'), {
-        className: 'canvas-box',
-        id: `background-box`,
-        ondblclick: () => {
-            fs.style.display = fs.style.display === 'none' ? 'flex' : 'none';
-        }
-    });
-    
-    const fs = Object.assign(document.createElement('button'), {
-        className: 'fullscreen-button',
-        id: `background-fullscreen`,
-        textContent: 'Fullscreen',
-        onclick: () => {
-            if (document.fullscreenElement) {
-                document.exitFullscreen();
-            } else {
-                box.requestFullscreen();
-            }
-        },
-    });
 
     box.append(canvas, fs);
     document.body.prepend(box);

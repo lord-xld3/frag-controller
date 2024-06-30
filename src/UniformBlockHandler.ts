@@ -1,46 +1,58 @@
-import { newBuffer, BufferObject } from "./BufferObject";
-
-type UniformBlock = {
-    /**
-     * Binds the uniform block index to a binding point. Default: 0
-     */
-    (binding?: number): void;
-    /**
-     * Returned size of the uniform block in the program.
-     */
-    size: number;
-}
+import { newBuffer } from "./BufferObject";
 
 /**
- * Returns the size of a uniform block and a function to bind it to a binding point. Also binds on call.
+ * Returns a binding function with a size property.
  * @param gl - The WebGL2RenderingContext.
  * @param program - The WebGLProgram.
  * @param blockName - The name of the uniform block.
- * @param binding - The binding point to bind the uniform block to. (Default: 0)
- * @note We need the size of the uniform block to create a buffer that can hold the block.
- * @example const size = getUniformBlock(gl, program, 'BlockName').size;
  */
 export function getUniformBlock(
     gl: WebGL2RenderingContext,
     program: WebGLProgram,
     blockName: string,
-    binding: number = 0,
-): UniformBlock {
+) {
     const blockIndex = gl.getUniformBlockIndex(program, blockName);
     if (blockIndex === -1) {
         console.warn(`Uniform block ${blockName} not found in program.`);
     }
 
-    const bindBlock = (binding: number = 0) => {
-        gl.uniformBlockBinding(program, blockIndex, binding);
-    }
-
-    bindBlock(binding);
-
     return Object.assign(
-        bindBlock, 
+        /**
+         * Bind the uniform block to a specified index
+         * @param binding - U32. Default 0.
+         */
+        (binding: number = 0) => {
+            gl.uniformBlockBinding(program, blockIndex, binding);
+        }, 
         {size: gl.getActiveUniformBlockParameter(program, blockIndex, gl.UNIFORM_BLOCK_DATA_SIZE) as number}
     )
+}
+
+/**
+ * Returns a function to set the contents of the uniform buffer, 
+ * includes a bufferIndex() method to bind the uniform buffer to a specified index.
+ * @param gl - WebGL2Context
+ * @param maxSize - The max size of the buffer which should be retrieved from getUniformBlock().size.
+ */
+export function newUniformBuffer(
+    gl: WebGL2RenderingContext,
+    maxSize: number,
+) {
+    const bufferObject = newBuffer(
+        gl,
+        maxSize,
+        gl.UNIFORM_BUFFER, 
+        gl.STATIC_DRAW,
+    );
+
+    return Object.assign(bufferObject, {
+        /**
+         * Binds the uniform buffer to a specified index.
+         * @param binding - U32. Default 0.
+         */
+        bufferIndex: (binding: number = 0) => {
+            gl.bindBufferBase(gl.UNIFORM_BUFFER, binding, bufferObject.buf);
+    }})
 }
 
 /**
@@ -51,18 +63,12 @@ export function getUniformBlock(
  * @note The purpose of this function is to allow binding multiple uniform blocks to the same binding point.
  * The blocks can have different sizes, extra data is ignored in the shader program.
  * We need the max size to create buffer(s) that can hold all the blocks.
- * @example const [maxSize, bindBlock] = getUniformBlocks(
- * gl, 
- * [
- * [program1, ['BlockName1', 'BlockName2']], 
- * [program2, ['BlockName3']]
- * ]);
  */
 export function getUniformBlocks(
     gl: WebGL2RenderingContext,
     blocks: [WebGLProgram, string[]][],
     binding: number = 0,
-): UniformBlock {
+) {
     let maxSize = 0,
         blockInfo:[WebGLProgram, number[]][] = [],
         i = 0,
@@ -100,36 +106,4 @@ export function getUniformBlocks(
 
     bindBlock(binding);
     return Object.assign(bindBlock, {size: maxSize})
-}
-
-type UniformBufferObject = BufferObject & {
-    /** Binds the buffer to a specified binding point. Default: 0 */
-    bufferBinding: (binding?: number) => void;
-}
-
-/**
- * Creates, binds, and initializes a new uniform buffer object.
- * @param gl - WebGL2Context
- * @param maxSize - The max size of the buffer which should be retrieved from getUniformBlock().size.
- * @param binding - The binding point to bind the uniform buffer to. (Default: 0)
- */
-export function newUniformBuffer(
-    gl: WebGL2RenderingContext,
-    maxSize: number, 
-    binding: number = 0,
-): UniformBufferObject {
-    const bufferObject = newBuffer(
-        gl,
-        maxSize,
-        gl.UNIFORM_BUFFER, 
-        gl.STATIC_DRAW,
-    );
-
-    const bufferBinding = function(binding: number = 0)  {
-        gl.bindBufferBase(gl.UNIFORM_BUFFER, binding, bufferObject.buf);
-    }
-
-    bufferBinding(binding);
-
-    return Object.assign(bufferObject, {bufferBinding: bufferBinding})
 }

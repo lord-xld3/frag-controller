@@ -1,19 +1,7 @@
-export type BufferObject = {
-    /** Set data of buffer 
-     * @param data - Array to set.
-     * @param dstByteOffset - Destination offset in bytes.
-     * @param srcOffset - Source offset index.
-     * @param length - Source element length.
-    */
-    (data: ArrayBufferView, dstByteOffset?: number, srcOffset?: number, length?: number): void
-    /** Bind buffer */
-    bindBuffer: () => void;
-    /** WebGLBuffer */
-    buf: WebGLBuffer;
-}
+
 
 /**
- * Initializes a new WebGLBuffer.
+ * Returns a function to set the buffer.
  * @param gl - GL context
  * @param size - Buffer size in bytes.
  * @param target - GLenum
@@ -24,7 +12,7 @@ export function newBuffer(
     size: number,
     target: number, 
     usage: number, 
-): BufferObject {
+) {
     const buf = gl.createBuffer()!;
     if (!buf) console.warn(`Failed to create BufferObject.`);
 
@@ -33,10 +21,16 @@ export function newBuffer(
     bindBuffer();
     gl.bufferData(target, size, usage);
     
-    return Object.assign((
+    return Object.assign(
+        /** Set the contents of the WebGLBuffer */
+        (
+        /** A typed array or ArrayBuffer */
         data: ArrayBufferView, 
+        /** Destination offset in bytes */
         dstByteOffset: number = 0,
+        /** Destination offset in elements */
         srcOffset: number = 0,
+        /** Optional number of elements to copy from source */
         length?: number
     ) => gl.bufferSubData(target, dstByteOffset, data, srcOffset, length), 
     {
@@ -44,4 +38,6 @@ export function newBuffer(
         buf,
     })
 };
+
+
 

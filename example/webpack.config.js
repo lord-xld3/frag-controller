@@ -69,6 +69,7 @@ module.exports = {
     plugins: [
         new HtmlWebpackPlugin({
             template: './index.html',
+            scriptLoading: 'defer',
             minify: {
                 collapseWhitespace: true,
                 removeComments: true,
