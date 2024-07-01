@@ -1,3 +1,3 @@
 #version 300 es
 #define A  gl_FragCoord.xy
-precision highp float;out vec4 o;uniform U{uvec2 B;vec2 C,D,E;vec3 F;float G,H;};void main(){float I=1./(exp(G)*D.y),J=C.y*I+C.x;vec2 K=(A+A-D)*I+E,L=K,M=K*K;int N=0,O=int(float(B.y-B.x)*pow(G/12.,2.))+int(B.x);while(N<O&&M.x<J){K=vec2(M.x-M.y+L.x,2.*K.x*K.y+L.y);M=K*K;++N;}o=(N<O)?vec4(.5+.5*cos((float(N)+1.-log2(log2(dot(K,K))/log2(J)))*H+F),1):vec4(0);}
+precision highp float;out vec4 o;uniform z{uvec2 B;vec2 C,D,E;vec3 F;float G,H;};void main(){float I=1./(exp(G)*D.y),J=C.y*I+C.x;vec2 K=(A+A-D)*I+E,L=K,z=K*K;int M=0,N=int(float(B.y-B.x)*pow(G/12.,2.))+int(B.x);while(M<N&&z.x<J){K=vec2(z.x-z.y+L.x,2.*K.x*K.y+L.y);z=K*K;++M;}o=(M<N)?vec4(.5+.5*cos((float(M)+1.-log2(log2(dot(K,K))/log2(J)))*H+F),1):vec4(0);}
