@@ -77,7 +77,7 @@ export function canvasTemplate(
                     panel.style.height = '100%';
                 } else {
                     box.requestFullscreen();
-                    panel.style.height = 'auto';
+                    panel.style.height = '100%';
                 }
             }
         });

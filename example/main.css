@@ -32,7 +32,8 @@ h3 {
     position: relative;
     margin-left: 5%;
     margin-right: 5%;
-    height: 100%;
+    height: auto;
+    padding-bottom: 100vh;
 }
 ul {
     padding: 1% 0 1% auto;
@@ -50,7 +51,6 @@ a {
 .canvas-container {
     display: flex;
     flex-direction: column;
-    width: 100%;
 }
 
 .canvas-caption {

@@ -16,14 +16,18 @@ void main() {
     vec2 f = F*R - 1.; // NDC
     
     float G = length(f),
-        N = dot(M, M), // dot(mouse) used for wave offset
-        A = radians((sin(T) - M.x) * G * 90. ) - M.x, // rotation angle
+        X = sin(T),
+        N = length(M), // length(mouse.xy) used for wave offset
+        A = radians((X - M.x) * G * 90. ) - M.x, // rotation angle
         B = sin(A),
-        C = cos(A);
+        C = cos(A),
+        D = .5+.5*X;
         
     // this transform is pretty cool
-    f = mix(f, f*cos(f)/(.5+.5*G), .5 + .5*sin(T) + N)
-    * mat2(C, B, -B, C) * (3. + .5*sin(T) + M.y)/Z; // rotate, zoom +- mouse.y
+    f = mix(f, f*cos(f)/(.5+.5*G), D + N);
+    
+    // rotate, zoom +- mouse.y
+    f *= mat2(C, B, -B, C) * (2.5 + D + M.y);
     
     // wave
     float W = T + abs(f.x * f.y) + sin(cos(T) * dot(f, f)),

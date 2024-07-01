@@ -26,18 +26,21 @@ module.exports = {
             {
                 test: /\.css$/,
                 exclude: /node_modules/,
-                use: [MiniCssExtractPlugin.loader, 'css-loader'],
+                use: [
+                    MiniCssExtractPlugin.loader,
+                    'css-loader',
+                ],
             },
             {
                 test: /\.(png|svg|jpg|gif|webp|sh|ico)$/,
                 exclude: /node_modules/,
                 use: {
-                    loader: 'file-loader',
-                    options: {
-                        name: '[path][name].[ext]',
-                    },
+                  loader: 'file-loader',
+                  options: {
+                    name: '[path][name].[ext]',
+                  },
                 },
-            },
+              },
             {
                 test: /\.(glsl|vs|fs|vert|frag)$/,
                 exclude: /node_modules/,
@@ -67,9 +70,11 @@ module.exports = {
         extensions: ['.tsx', '.ts', '.js', '.css', '.glsl', '.vs', '.fs', '.vert', '.frag'],
     },
     plugins: [
+        
         new HtmlWebpackPlugin({
             template: './index.html',
-            scriptLoading: 'defer',
+            scriptLoading: 'blocking',
+            inject: 'body',
             minify: {
                 collapseWhitespace: true,
                 removeComments: true,
