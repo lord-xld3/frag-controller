@@ -74,14 +74,18 @@ export function canvasTemplate(
             onclick: () => {
                 if (document.fullscreenElement) {
                     document.exitFullscreen();
+                    panel.style.height = '100%';
                 } else {
                     box.requestFullscreen();
+                    panel.style.height = 'auto';
                 }
             }
         });
 
         let i = 0;
         const upfunc = () => {i = 0;}
+
+        // dblclick / triple press on box containing canvas and panel
         Object.assign(box, { 
             ondblclick: (e: MouseEvent) => {
                 e.preventDefault();

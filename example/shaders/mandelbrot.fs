@@ -4,7 +4,7 @@
 precision highp float;
 out vec4 o;
 
-uniform U {
+uniform z {
     uvec2 iterations;
     vec2 escape,     
         resolution, 

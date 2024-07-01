@@ -37,16 +37,18 @@ export function newProgram(gl: WebGL2RenderingContext, vert: string, frag: strin
  * Creates a "Screen Space Quad" program. A.K.A. two triangles that cover the entire screen.
  * @param gl - The WebGL2RenderingContext.
  * @param frag - The fragment shader source.
- * @returns [Program, draw function()]
- * @example const [program, draw] = useSSQ(gl, `#version 300...`)
+ * @return A draw function() with a program property: p
  */
 export function useSSQ(gl: WebGL2RenderingContext, frag: string) {
-    const p = newProgram(gl, `#version 300 es\nin vec2 a;void main(){gl_Position=vec4(a,0,1);}`, frag),
+    const program = newProgram(gl, `#version 300 es\nin vec2 a;void main(){gl_Position=vec4(a,0,1);}`, frag),
         v = newVAO(gl);
     
-    gl.useProgram(p);
+    // Bind program
+    gl.useProgram(program);
     
+    // Bind VertexArrayObject
     v();
+
     // Size 48 bytes, ARRAY_BUFFER, STATIC_DRAW
     newBuffer(gl, 48, 0x8892, 0x88E4)(new Float32Array([
         -1,-1,
@@ -56,7 +58,7 @@ export function useSSQ(gl: WebGL2RenderingContext, frag: string) {
         1,-1,
         1,1
     ]))
-    mapAttributes(gl, p, 
+    mapAttributes(gl, program, 
         [
             { name: 'a', size: 2 }
         ]
@@ -67,13 +69,13 @@ export function useSSQ(gl: WebGL2RenderingContext, frag: string) {
          * Draw the SSQ program.
          */
         () => {
-            gl.useProgram(p);
+            gl.useProgram(program);
             v();
             gl.drawArrays(0x0004, 0, 6); 
         }, 
-        /** Program */
         { 
-            p 
-        } 
+            /** WebGLProgram */
+            program
+        }
     )
 };

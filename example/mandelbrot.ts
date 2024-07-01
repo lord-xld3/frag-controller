@@ -10,12 +10,12 @@ export default function loadMandelbrot() {
 
     const draw = gluu.useSSQ(gl, `#version 300 es
 #define A  gl_FragCoord.xy
-precision highp float;out vec4 o;uniform U{uvec2 B;vec2 C,D,E;vec3 F;float G,H;};void main(){float I=1./(exp(G)*D.y),J=C.y*I+C.x;vec2 K=(A+A-D)*I+E,L=K,M=K*K;int N=0,O=int(float(B.y-B.x)*pow(G/12.,2.))+int(B.x);while(N<O&&M.x<J){K=vec2(M.x-M.y+L.x,2.*K.x*K.y+L.y);M=K*K;++N;}o=(N<O)?vec4(.5+.5*cos((float(N)+1.-log2(log2(dot(K,K))/log2(J)))*H+F),1):vec4(0);}`);
+precision highp float;out vec4 o;uniform z{uvec2 B;vec2 C,D,E;vec3 F;float G,H;};void main(){float I=1./(exp(G)*D.y),J=C.y*I+C.x;vec2 K=(A+A-D)*I+E,L=K,M=K*K;int N=0,O=int(float(B.y-B.x)*pow(G/12.,2.))+int(B.x);while(N<O&&M.x<J){K=vec2(M.x-M.y+L.x,2.*K.x*K.y+L.y);M=K*K;++N;}o=(N<O)?vec4(.5+.5*cos((float(N)+1.-log2(log2(dot(K,K))/log2(J)))*H+F),1):vec4(0);}`);
 
     // In this usage, we let the user update the devicePixelRatio, so we don't get the dpr from the "true size".
     let dpr = window.devicePixelRatio;
 
-    const uniformBlock = gluu.getUniformBlock(gl, draw.p, 'U')
+    const uniformBlock = gluu.getUniformBlock(gl, draw.program, 'z')
     uniformBlock(0)
     const base = gluu.newUniformBuffer(gl, uniformBlock.size);
     base.bufferIndex(0)
@@ -208,7 +208,7 @@ precision highp float;out vec4 o;uniform U{uvec2 B;vec2 C,D,E;vec3 F;float G,H;}
     }, {passive: false});
     
     document.getElementById('canvas-content')!.append(gluu.canvasTemplate(canvas, "mandelbrot", "Mandelbrot Set Explorer",
-        gluu.controlTemplate(controlDPR, "Resolution Scale"),
+        gluu.controlTemplate(controlDPR, "Resolution"),
         gluu.controlTemplate(controlZoom, "Zoom"),
         gluu.controlTemplate(controlMinIter, "Min Iterations"),
         gluu.controlTemplate(controlMaxIter, "Max Iterations"),
