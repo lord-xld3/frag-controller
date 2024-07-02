@@ -30,6 +30,8 @@ export function newProgram(gl: WebGL2RenderingContext, vert: string, frag: strin
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
         throw new Error(gl.getProgramInfoLog(program)!);
     }
+    gl.deleteShader(vs);
+    gl.deleteShader(fs);
     return program;
 };
 

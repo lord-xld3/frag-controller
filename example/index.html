@@ -25,5 +25,12 @@
         </h3>
         <div id="canvas-content"></div>
     </div>
+<script id="background-shader" type="x-shader/x-fragment">#version 300 es
+#define A  gl_FragCoord.xy
+#define B  (F+F)/iResolution - 1.
+precision mediump float;out vec3 color;uniform z{vec2 C,D;highp float E,F;};void main(){vec2 G=B;float H=length(G),I=sin(E),J=length(C),K=radians((I-C.x)*H*90.)-C.x,L=sin(K),M=cos(K),N=.5+.5*I;G=mix(G,G*cos(G)/(.5+.5*H),N+J);G*=mat2(M,L,-L,M)*(2.5+N+C.y)/F;float O=E+abs(G.x*G.y)+sin(cos(E)*dot(G,G)),P=sin(3.*O+3.*J),Q=1./fwidth(P),R=smoothstep(.5,2.,H);color=vec3((.5+.5*cos(O+J+vec3(0,2,4))-R)*(smoothstep(1.,-1.,(abs(P)-.5)*Q)+smoothstep(3.,-3.,abs(P)))+smoothstep(1.,-1.,(P+.95)*Q+R));}</script>
+<script id="mandelbrot-shader" type="x-shader/x-fragment">#version 300 es
+#define A  gl_FragCoord.xy
+precision mediump float;out vec3 color;uniform z{vec2 B,C;highp float D,E;uvec2 F;vec2 G,H;vec3 color;float I;};void main(){float J=1./(exp(E)*C.y),K=G.y*J+G.x;vec2 L=(A+A-C)*J+H,M=L,z=L*L;int N=0,O=int(float(F.y-F.x)*pow(E/12.,2.))+int(F.x);while(N<O&&z.x<K){L=vec2(z.x-z.y+M.x,2.*L.x*L.y+M.y);z=L*L;++N;}P=(N<O)?vec4(.5+.5*cos((float(N)+1.-log2(log2(dot(L,L))/log2(K)))*I+color),1):vec4(0);}</script>    
 </body>
 </html>

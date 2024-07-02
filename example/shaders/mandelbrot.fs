@@ -1,29 +1,28 @@
 #version 300 es
-
 #define f gl_FragCoord.xy
-precision highp float;
-out vec4 o;
+precision mediump float;
+out vec3 color;
 
 uniform z {
+    vec2 iMouse, iResolution;
+    highp float iTime, iZoom;
+    
     uvec2 iterations;
-    vec2 escape,     
-        resolution, 
-        delta;      
+    vec2 escape, delta;      
     vec3 color;
-    float Z, // Zoom
-        colorScale;
+    float colorScale;
 };
 
 void main() {
-    float zoom = 1./(exp(Z)*resolution.y),
+    float zoom = 1./(exp(iZoom)*iResolution.y),
         maxescape = escape.y*zoom + escape.x;
     
-    vec2 n = (f+f - resolution)*zoom + delta,
+    vec2 n = (f+f - iResolution)*zoom + delta,
         p = n,
         z = n * n;
     
     int i = 0,
-        scalediter = int(float(iterations.y - iterations.x) * pow(Z/12., 2.)) 
+        scalediter = int(float(iterations.y - iterations.x) * pow(iZoom/12., 2.)) 
         + int(iterations.x);
     
     while (i < scalediter && z.x < maxescape) {

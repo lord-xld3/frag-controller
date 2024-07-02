@@ -1,41 +1,39 @@
 #version 300 es
-
 #define F gl_FragCoord.xy
-
-precision highp float;
-
-out vec4 o;
+#define NDC (F+F)/iResolution - 1.
+precision mediump float;
+out vec3 color;
 
 uniform z {
-    vec2 M, R;
-    // force time to be highp float
-    highp float T, Z;
+    vec2 iMouse, iResolution;
+    highp float iTime, iZoom;
 };
 
 void main() {
-    vec2 f = F*R - 1.; // NDC
+    vec2 f = NDC; // NDC (-1.0 -> 1.0)
     
-    float G = length(f),
-        X = sin(T),
-        N = length(M), // length(mouse.xy) used for wave offset
-        A = radians((X - M.x) * G * 90. ) - M.x, // rotation angle
+    float lF = length(f),
+        sT = sin(iTime),
+        lM = length(iMouse),
+        A = radians((sT - iMouse.x) * lF * 90. ) - iMouse.x, // rotation angle
         B = sin(A),
         C = cos(A),
-        D = .5+.5*X;
+        nT = .5+.5*sT; // ( 0 -> 1) 
         
     // this transform is pretty cool
-    f = mix(f, f*cos(f)/(.5+.5*G), D + N);
+    //                  (0 -> 1), 0->1 + dist of mouse from center 0,0
+    f = mix(f, f*cos(f)/(.5+.5*lF), nT + lM);
     
     // rotate, zoom +- mouse.y
-    f *= mat2(C, B, -B, C) * (2.5 + D + M.y);
+    f *= mat2(C, B, -B, C) * (2.5 + nT + iMouse.y)/iZoom;
     
     // wave
-    float W = T + abs(f.x * f.y) + sin(cos(T) * dot(f, f)),
+    float wave = iTime + abs(f.x * f.y) + sin(cos(iTime) * dot(f, f)),
         // edge
-        e = sin(3.*W + 3.*N),
-        d = 1./fwidth(e),
+        edge = sin(3.*wave + 3.*lM),
+        d = 1./fwidth(edge),
         // vignette
-        v = smoothstep(.5, 2., G);
+        v = smoothstep(.5, 2., lF);
         
     /* 
     the vignette is applied to color and white edges separately...
@@ -43,14 +41,13 @@ void main() {
     looking for a better way to do this.
     */
         
-    o = vec4(
+    color = vec3(
     // rgb waves - vignette
-    (.5 + .5*cos(W + N + vec3(0, 2, 4)) - v)
+    (.5 + .5*cos(wave + lM + vec3(0, 2, 4)) - v)
     // black edges
-    * (smoothstep(1., -1., (abs(e) - .5) * d)
+    * (smoothstep(1., -1., (abs(edge) - .5) * d)
         // edge glow
-        + smoothstep(3., -3., abs(e)))
+        + smoothstep(3., -3., abs(edge)))
     // white edges - vignette
-    + smoothstep(1., -1., (e +.95) * d + v), 
-    1.); // alpha
+    + smoothstep(1., -1., (edge +.95) * d + v));
 }

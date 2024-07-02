@@ -8,9 +8,7 @@ export default function loadBackground() {
         powerPreference: 'high-performance',
     });
 
-    const draw = gluu.useSSQ(gl, `#version 300 es
-#define A  gl_FragCoord.xy
-precision highp float;out vec4 o;uniform z{vec2 B,C;highp float D,E;};void main(){vec2 F=A*C-1.;float G=length(F),H=sin(D),I=length(B),J=radians((H-B.x)*G*90.)-B.x,K=sin(J),L=cos(J),M=.5+.5*H;F=mix(F,F*cos(F)/(.5+.5*G),M+I);F*=mat2(L,K,-K,L)*(2.5+M+B.y);float N=D+abs(F.x*F.y)+sin(cos(D)*dot(F,F)),O=sin(3.*N+3.*I),P=1./fwidth(O),Q=smoothstep(.5,2.,G);o=vec4((.5+.5*cos(N+I+vec3(0,2,4))-Q)*(smoothstep(1.,-1.,(abs(O)-.5)*P)+smoothstep(3.,-3.,abs(O)))+smoothstep(1.,-1.,(O+.95)*P+Q),1.);}`);
+    const draw = gluu.useSSQ(gl, document.getElementById('background-shader')!.textContent!);
     const uniformBlock = gluu.getUniformBlock(gl, draw.program, 'z')
     uniformBlock(0)
     const base = gluu.newUniformBuffer(gl, uniformBlock.size);
@@ -51,13 +49,13 @@ precision highp float;out vec4 o;uniform z{vec2 B,C;highp float D,E;};void main(
             if (ec.length === 1) {
                 // offset 0,0 is top-left
                 // normalize to -1, 1
-                base(new Float32Array([e.offsetX*W - 1, -e.offsetY*H + 1]));
+                base(new Float32Array([(e.offsetX+e.offsetX)/canvas.clientWidth - 1, -(e.offsetY+e.offsetY)/canvas.clientHeight + 1]));
             }
             else if (ec.length === 2 && e.isPrimary) {
                 const [e1, e2] = ec;
                 const d = Math.hypot(e1.offsetX - e2.offsetX, e1.offsetY - e2.offsetY);
                 if (pd) {
-                    base(new Float32Array([z = Math.max(z + (d - pd) * H * 2, .5)]), 20);
+                    base(new Float32Array([z = Math.max(z + (d - pd) / canvas.clientHeight * 2, .5)]), 20);
                 }
                 pd = d;
             }
@@ -69,7 +67,7 @@ precision highp float;out vec4 o;uniform z{vec2 B,C;highp float D,E;};void main(
     });
     canvas.addEventListener('wheel', (e) => {
         e.preventDefault();
-        base(new Float32Array([z = Math.max(z - e.deltaY * z*H *.5, .5)]), 20);
+        base(new Float32Array([z = Math.max(z - e.deltaY * z/canvas.clientHeight *.5, .5)]), 20);
     }, { passive: false });
 
     const box = Object.assign(document.createElement('div'), {
@@ -100,10 +98,7 @@ precision highp float;out vec4 o;uniform z{vec2 B,C;highp float D,E;};void main(
     window.addEventListener('resize', () => {
         const [w, h] = resizeCanvas();
         resizeViewport(w, h);
-        // Mouse relies on client size, 
-        // canvas is normally client * devicepixelratio
-        W = 2/canvas.clientWidth, H = 2/canvas.clientHeight;
-        base(new Float32Array([2/w, 2/h]), 8)
+        base(new Float32Array([w, h]), 8)
     });
     window.dispatchEvent(new Event('resize'));
 

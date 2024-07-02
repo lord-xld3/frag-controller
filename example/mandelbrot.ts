@@ -8,9 +8,7 @@ export default function loadMandelbrot() {
         powerPreference: 'high-performance',
     });
 
-    const draw = gluu.useSSQ(gl, `#version 300 es
-#define A  gl_FragCoord.xy
-precision highp float;out vec4 o;uniform z{uvec2 B;vec2 C,D,E;vec3 F;float G,H;};void main(){float I=1./(exp(G)*D.y),J=C.y*I+C.x;vec2 K=(A+A-D)*I+E,L=K,M=K*K;int N=0,O=int(float(B.y-B.x)*pow(G/12.,2.))+int(B.x);while(N<O&&M.x<J){K=vec2(M.x-M.y+L.x,2.*K.x*K.y+L.y);M=K*K;++N;}o=(N<O)?vec4(.5+.5*cos((float(N)+1.-log2(log2(dot(K,K))/log2(J)))*H+F),1):vec4(0);}`);
+    const draw = gluu.useSSQ(gl, document.getElementById('mandelbrot-shader')!.textContent!);
 
     // In this usage, we let the user update the devicePixelRatio, so we don't get the dpr from the "true size".
     let dpr = window.devicePixelRatio;
@@ -19,29 +17,43 @@ precision highp float;out vec4 o;uniform z{uvec2 B;vec2 C,D,E;vec3 F;float G,H;}
     uniformBlock(0)
     const base = gluu.newUniformBuffer(gl, uniformBlock.size);
     base.bufferIndex(0)
+
+    // Define uniform offsets in shader
+    const oResolution = 8,
+        oZoom = 20,
+        oMinIter = 24,
+        oMaxIter = 28,
+        oMinEsc = 32,
+        oMaxEsc = 36,
+        oDelta = 40,
+        oHue = 48,
+        oScale = 60;
     
-    base(new Uint32Array([80, 400]))
     base(new Float32Array([
-        // Escape
-        6, 0.5e4,
-        // Resolution
-        canvas.clientWidth * dpr, canvas.clientHeight * dpr,
-        -0.74, 0.18, // Delta
-        // Color
-        3,4,5,
-        0, // Zoom
-        0.1 // Color-Scale
-    ]), 8);
+        canvas.clientWidth * dpr, canvas.clientHeight * dpr, //[8]
+        0, // Time //[16]
+        0, // Zoom //[20]
+    ]), oResolution)
+    base(new Uint32Array([
+        80, // min iter //[24]
+        400] // max iter //[28]
+    ), oMinIter)
+    base(new Float32Array([
+        6, 0.5e4, // Escape //[32]
+        -0.74, 0.18, // Delta //[40]
+        3,4,5, // Color //[48]
+        0.1 // Color-Scale //[60]
+    ]), oMinEsc);
 
     function setZoom(z: number) {
         controlZoom.value = z.toString();;
         m = Math.exp(-z);
-        base(new Float32Array([z]), 44);
+        base(new Float32Array([z]), oZoom);
     }
 
     function setResolution(w: number, h: number) {
         H = 2/canvas.clientHeight;
-        base(new Float32Array([w, h]), 16)
+        base(new Float32Array([w, h]), oResolution)
     }
 
     const controlDPR = Object.assign(document.createElement('input'), {
@@ -83,7 +95,7 @@ precision highp float;out vec4 o;uniform z{uvec2 B;vec2 C,D,E;vec3 F;float G,H;}
         value: "80",
         oninput: () => {
             controlMaxIter.min = controlMinIter.value.toString();
-            base(new Uint32Array([controlMinIter.valueAsNumber]), 0);
+            base(new Uint32Array([controlMinIter.valueAsNumber]), oMinIter);
             requestAnimationFrame(render);
         }
     })
@@ -97,7 +109,7 @@ precision highp float;out vec4 o;uniform z{uvec2 B;vec2 C,D,E;vec3 F;float G,H;}
         value: "400",
         oninput: () => {
             controlMinIter.max = controlMaxIter.value.toString();
-            base(new Uint32Array([controlMaxIter.valueAsNumber]), 4);
+            base(new Uint32Array([controlMaxIter.valueAsNumber]), oMaxIter);
             requestAnimationFrame(render);
         }
     })
@@ -111,7 +123,7 @@ precision highp float;out vec4 o;uniform z{uvec2 B;vec2 C,D,E;vec3 F;float G,H;}
         value: "6",
         oninput: () => {
             controlEscapeMax.min = controlEscapeMin.value.toString();
-            base(new Float32Array([controlEscapeMin.valueAsNumber]), 8);
+            base(new Float32Array([controlEscapeMin.valueAsNumber]), oMinEsc);
             requestAnimationFrame(render);
         }
     })
@@ -124,7 +136,7 @@ precision highp float;out vec4 o;uniform z{uvec2 B;vec2 C,D,E;vec3 F;float G,H;}
         max: "1e4",
         value: "5e3",
         oninput: () => {
-            base(new Float32Array([controlEscapeMax.valueAsNumber]), 12);
+            base(new Float32Array([controlEscapeMax.valueAsNumber]), oMaxEsc);
             requestAnimationFrame(render);
         }
     })
@@ -139,7 +151,7 @@ precision highp float;out vec4 o;uniform z{uvec2 B;vec2 C,D,E;vec3 F;float G,H;}
         oninput: () => {
             base(new Float32Array([
                 ...gluu.adjustNonZeroHue(3, 4, 5, controlHue.valueAsNumber)
-            ]), 32);
+            ]), oHue);
             requestAnimationFrame(render);
         }
     })
@@ -152,7 +164,7 @@ precision highp float;out vec4 o;uniform z{uvec2 B;vec2 C,D,E;vec3 F;float G,H;}
         max: ".5",
         value: ".1",
         oninput: () => {
-            base(new Float32Array([controlColorScale.valueAsNumber]), 48);
+            base(new Float32Array([controlColorScale.valueAsNumber]), oScale);
             requestAnimationFrame(render);
         }
     })
@@ -183,7 +195,7 @@ precision highp float;out vec4 o;uniform z{uvec2 B;vec2 C,D,E;vec3 F;float G,H;}
             if (ec.length === 1) {
                 dx -= e.movementX * m * H,
                 dy += e.movementY * m * H;
-                base(new Float32Array([dx, dy]), 24);
+                base(new Float32Array([dx, dy]), oDelta);
             }
             else if (ec.length === 2 && e.isPrimary) {
                 const [e1, e2] = ec;
