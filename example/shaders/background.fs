@@ -1,16 +1,15 @@
 #version 300 es
 #define F gl_FragCoord.xy
-#define NDC (F+F)/iResolution - 1.
-precision mediump float;
+precision highp float;
 out vec3 color;
-
 uniform z {
-    vec2 iMouse, iResolution;
-    highp float iTime, iZoom;
+    vec2 iMouse, // NDC
+        iResolution; // 2 / resolution
+    float iTime, iZoom;
 };
 
 void main() {
-    vec2 f = NDC; // NDC (-1.0 -> 1.0)
+    vec2 f = F*iResolution - 1.; // NDC (-1.0 -> 1.0)
     
     float lF = length(f),
         sT = sin(iTime),

@@ -10,17 +10,17 @@ body, html {
     width: 100%;
 }
 h1 {
-    font-size: xx-large;
+    font-size: large;
     padding: 2%;
-    margin: 2% 2%;
+    margin: 40px 0 0 1%;
 }
 h2 {
-    font-size: x-large;
+    font-size: large;
     padding: 0% 1% 1%;
     margin: 5% 5% 0 0;
 }
 h3 {
-    font-size: large;
+    font-size: medium;
     padding: 1% 1% 0;
     margin: 0% 2% 0;
 }
@@ -33,22 +33,35 @@ h3 {
     margin-left: 5%;
     margin-right: 5%;
     height: auto;
-    padding-bottom: 100vh;
+    padding-bottom: 50vh;
 }
 ul {
     padding: 1% 0 1% auto;
     margin: 0;
 }
 li {
-    font-size: medium;
+    font-size: smaller;
 }
 a {
     margin: 0 0 0 3%;
     padding: 0;
     color: white;
+    width: max-content;
+}
+button {
+    user-select: none;
+}
+
+textarea {
+    background-color: #222;
+    color: #fff;
+    height: 100%;
+    resize: none;
+    padding: 1%;
 }
 
 .canvas-container {
+    padding-top: 5%;
     display: flex;
     flex-direction: column;
 }
@@ -84,12 +97,17 @@ a {
     background-color: rgba(0, 0, 0, 0.75);
     position: absolute;
     top: 0;
-    right: 0;
+    left: 0;
     width: 40%;
     height: 100%;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    resize: inline;
+}
+
+.panel-header {
+    display: flex;
 }
 
 /* Overlay styling */
@@ -100,7 +118,7 @@ a {
     display: flex;
     flex-direction: column;
 
-    padding: 1% 2% 1% 2%;
+    padding: 1% 10px 1% 10px;
 }
 
 /* Overlay label styling */
@@ -121,8 +139,27 @@ a {
     right: 2%;
 }
 
+.compile-button, .console-button {
+    padding: 4px;
+    background: linear-gradient(to bottom right, rgb(65, 57, 39), rgb(41, 30, 43));
+    border-style: outset;
+    color: white;
+    user-select: none;
+}
+
+.console-output {
+    display: none;
+}
+
+.contentbox {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+}
+
 .fullscreen-button {
-    padding: 10px;
+    padding: 0px;
+    font-size: medium;
     background: linear-gradient(to bottom right, rgb(0, 57, 83), rgb(36, 0, 77));
     border-style: outset;
     color: white;
@@ -130,7 +167,7 @@ a {
 }
 
 #background-fullscreen {
-    padding: 10px;
+    padding: 0px;
     position: fixed;
     right: 0;
     z-index: 1;

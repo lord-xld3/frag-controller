@@ -42,7 +42,7 @@ export function newProgram(gl: WebGL2RenderingContext, vert: string, frag: strin
  * @return A draw function() with a program property: p
  */
 export function useSSQ(gl: WebGL2RenderingContext, frag: string) {
-    const program = newProgram(gl, `#version 300 es\nin vec2 a;void main(){gl_Position=vec4(a,0,1);}`, frag),
+    let program = newProgram(gl, `#version 300 es\nin vec2 a;void main(){gl_Position=vec4(a,0,1);}`, frag),
         v = newVAO(gl);
     
     // Bind program

@@ -220,6 +220,7 @@ export default function loadMandelbrot() {
     }, {passive: false});
     
     document.getElementById('canvas-content')!.append(gluu.canvasTemplate(canvas, "mandelbrot", "Mandelbrot Set Explorer",
+        document.createElement('div'),
         gluu.controlTemplate(controlDPR, "Resolution"),
         gluu.controlTemplate(controlZoom, "Zoom"),
         gluu.controlTemplate(controlMinIter, "Min Iterations"),
