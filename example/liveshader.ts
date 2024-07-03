@@ -102,6 +102,7 @@ export default function loadLiveShader() {
         onclick: () => {
             try {
                 draw = gluu.useSSQ(gl, textBox.value)
+                outputBox.value = '';
             } catch (e: any) {
                 outputBox.value = e;
                 outputBox.style.display = 'block';

@@ -70,25 +70,16 @@ void main() {
     float wave = iTime + abs(f.x * f.y) + sin(cos(iTime) * dot(f, f)),
         // edge
         edge = sin(3.*wave + 3.*lM),
-        d = 1./fwidth(edge),
         // vignette
         v = smoothstep(.5, 2., lF);
-        
-    /* 
-    the vignette is applied to color and white edges separately...
-    white edge isn't true vignette, it subtracts thickness.
-    looking for a better way to do this.
-    */
         
     color = vec3(
     // rgb waves - vignette
     (.5 + .5*cos(wave + lM + vec3(0, 2, 4)) - v)
     // black edges
-    * (smoothstep(1., -1., (abs(edge) - .5) * d)
+    * (smoothstep(1., -1., (abs(edge) - .5) / fwidth(edge))
         // edge glow
-        + smoothstep(3., -3., abs(edge)))
-    // white edges - vignette
-    + smoothstep(1., -1., (edge +.95) * d + v));
+        + smoothstep(3., -3., abs(edge))));
 }</script>    
 </body>
 </html>
