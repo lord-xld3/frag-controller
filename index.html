@@ -29,7 +29,7 @@ void main() {
     f = mix(f, f*(.5+.5*lF), nT + lM);
 
     // weird reciprocals
-    f = mix(f, f*1./(lF+iMouse.y), nT + lM);
+    f = mix(f, f*1./(lF+iMouse.y-.5), nT + lM);
 
     // rotate, zoom +- mouse.y
     f *= mat2(C, B, -B, C) * (2.5 + nT + iMouse.y)*iZoom;
