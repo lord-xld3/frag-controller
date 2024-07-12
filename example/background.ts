@@ -118,7 +118,7 @@ export default function loadBackground() {
 
     function render(T: number) {
         gl.clear(gl.COLOR_BUFFER_BIT);
-        base(new Float32Array([T*5e-5]), oTime)
+        base(new Float32Array([T*1e-4]), oTime)
         draw();
         requestAnimationFrame(render);
     }

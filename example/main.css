@@ -11,7 +11,7 @@ body, html {
 }
 h1 {
     font-size: large;
-    padding: 2%;
+    padding: 2% 2% 0;
     margin: 40px 0 0 1%;
 }
 h2 {
@@ -20,6 +20,7 @@ h2 {
     margin: 5% 5% 0 0;
 }
 h3 {
+    color: #fa0;
     font-size: medium;
     padding: 1% 1% 0;
     margin: 0% 2% 0;
@@ -33,9 +34,10 @@ h3 {
     margin-left: 5%;
     margin-right: 5%;
     height: auto;
-    padding-bottom: 50vh;
+    padding-bottom: 30vh;
 }
 ul {
+    color: #fff;
     padding: 1% 0 1% auto;
     margin: 0;
 }
@@ -45,7 +47,7 @@ li {
 a {
     margin: 0 0 0 3%;
     padding: 0;
-    color: white;
+    color: #4FF;
     width: max-content;
 }
 button {
@@ -62,6 +64,7 @@ textarea {
 
 .canvas-container {
     padding-top: 5%;
+    margin: 5%;
     display: flex;
     flex-direction: column;
 }
@@ -108,6 +111,11 @@ textarea {
 
 .panel-header {
     display: flex;
+    padding: 0;
+}
+
+.panel-header button {
+    padding: 2px;
 }
 
 /* Overlay styling */
@@ -140,15 +148,11 @@ textarea {
 }
 
 .compile-button, .console-button {
-    padding: 4px;
+    padding: 0 0 2px 0;
     background: linear-gradient(to bottom right, rgb(65, 57, 39), rgb(41, 30, 43));
     border-style: outset;
     color: white;
     user-select: none;
-}
-
-.console-output {
-    display: none;
 }
 
 .contentbox {
@@ -158,7 +162,7 @@ textarea {
 }
 
 .fullscreen-button {
-    padding: 0px;
+    padding: 0 0 2px 0;
     font-size: medium;
     background: linear-gradient(to bottom right, rgb(0, 57, 83), rgb(36, 0, 77));
     border-style: outset;
@@ -167,7 +171,7 @@ textarea {
 }
 
 #background-fullscreen {
-    padding: 0px;
+    padding: 0 0 2px 0;
     position: fixed;
     right: 0;
     z-index: 1;

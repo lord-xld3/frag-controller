@@ -7,7 +7,7 @@ export default function loadLiveShader() {
         depth: false,
         powerPreference: 'high-performance',
     });
-    const shaderSource = document.getElementById('live-shader')!;
+    const shaderSource = document.getElementById('reciprocal-shader')!;
     let draw = gluu.useSSQ(gl, shaderSource.textContent!);
     const uniformBlock = gluu.getUniformBlock(gl, draw.program, 'z')
     uniformBlock(0)
@@ -75,21 +75,23 @@ export default function loadLiveShader() {
     }, { passive: false });
 
     const textBox = Object.assign(document.createElement('textarea'), {
-        id: 'live-source',
+        id: 'reciprocal-source',
         value: shaderSource.textContent,
         spellcheck: false,
     })
 
     const outputBox = Object.assign(document.createElement('textarea'), {
         className: 'console-output',
-        id: 'live-output',
+        id: 'reciprocal-output',
         spellcheck: false,
+        disabled: true,
     })
+    outputBox.style.display = 'none';
 
     const consoleButton = Object.assign(document.createElement('button'), {
         className: 'console-button',
-        id: 'live-console',
-        textContent: 'Log',
+        id: 'reciprocal-console',
+        textContent: '💬',
         onclick: () => {
             outputBox.style.display = outputBox.style.display === 'none' ? 'block' : 'none'
         }
@@ -97,8 +99,8 @@ export default function loadLiveShader() {
 
     const compile = Object.assign(document.createElement('button'), {
         className: 'compile-button',
-        id: 'compile-live',
-        textContent: 'Compile',
+        id: 'compile-reciprocal',
+        textContent: '💾',
         onclick: () => {
             try {
                 draw = gluu.useSSQ(gl, textBox.value)
@@ -115,12 +117,12 @@ export default function loadLiveShader() {
 
     const contentBox = Object.assign(document.createElement('div'), {
         className: 'contentbox',
-        id: 'live-contentbox',
+        id: 'reciprocal-contentbox',
     });
     contentBox.append(textBox, outputBox)
     
 
-    document.getElementById('canvas-content')!.append(gluu.canvasTemplate(canvas, 'live', 'Live Shader',
+    document.getElementById('canvas-content')!.append(gluu.canvasTemplate(canvas, 'reciprocal', 'Weird reciprocals',
         header,
         contentBox,
      ))
@@ -140,7 +142,7 @@ export default function loadLiveShader() {
 
     function render(T: number) {
         gl.clear(gl.COLOR_BUFFER_BIT);
-        base(new Float32Array([T*5e-5]), oTime)
+        base(new Float32Array([T*1e-4]), oTime)
         draw();
         requestAnimationFrame(render);
     }

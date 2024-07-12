@@ -34,7 +34,7 @@ precision highp float;out vec3 color;uniform z{vec2 B,C;float D,E;};void main(){
 <script id="mandelbrot-shader" type="x-shader/x-fragment">#version 300 es
 #define A  gl_FragCoord.xy
 precision highp float;out vec3 color;uniform z{vec2 B,C;float D,E;uvec2 F;vec2 G,H;vec3 I;float J;};void main(){float K=1./(exp(E)*C.y),L=G.y*K+G.x;vec2 M=(A+A-C)*K+H,N=M,z=M*M;int O=0,P=int(float(F.y-F.x)*pow(E/12.,2.))+int(F.x);while(O<P&&z.x<L){M=vec2(z.x-z.y+N.x,2.*M.x*M.y+N.y);z=M*M;++O;}color=(O<P)?vec3(.5+.5*cos((float(O)+1.-log2(log2(dot(M,M))/log2(L)))*J+I)):vec3(0);}</script>
-<script id="live-shader" type="x-shader/x-fragment">#version 300 es
+<script id="reciprocal-shader" type="x-shader/x-fragment">#version 300 es
 #define F gl_FragCoord.xy
 precision highp float;
 out vec3 color;
@@ -56,30 +56,33 @@ void main() {
         C = cos(A),
         nT = .5+.5*sT; // ( 0 -> 1) 
         
+    // this transform is pretty cool
+    //                  (0 -> 1), 0->1 + mouse dist
+    f = mix(f, f*(.5+.5*lF), nT + lM);
+
+    // weird reciprocals
+    f = mix(f, f*1./(lF+iMouse.y-.5), nT + lM);
+
     // rotate, zoom +- mouse.y
     f *= mat2(C, B, -B, C) * (2.5 + nT + iMouse.y)*iZoom;
 
-    // this transform is pretty cool
-    //                  (0 -> 1), 0->1 + mouse dist
-    f = mix(f, f*cos(f)/(.5+.5*lF), nT + lM);
-
-    // weird reciprocals
-    f = mix(f, f*1./(lF), nT + lM);
-
     // wave
-    float wave = iTime + abs(f.x * f.y) + sin(cos(iTime) * dot(f, f)),
+    float wave = iTime + abs(f.x * f.y) + cos(iTime) * sT*dot(f, f),
         // edge
-        edge = sin(3.*wave + 3.*lM),
-        // vignette
-        v = smoothstep(.5, 2., lF);
+        edge = sin(wave + 3.*lM);
         
     color = vec3(
-    // rgb waves - vignette
-    (.5 + .5*cos(wave + lM + vec3(0, 2, 4)) - v)
+    // rgb waves
+    2.*cos(wave + lM + vec3(1, 2, 3))
+
+    // this darkens the "noisy" areas
+    *smoothstep(2., -2., fwidth(wave))
+
     // black edges
     * (smoothstep(1., -1., (abs(edge) - .5) / fwidth(edge))
         // edge glow
         + smoothstep(3., -3., abs(edge))));
+    
 }</script>    
 </body>
 </html>
