@@ -17,14 +17,14 @@ export function getUniformBlock(
     }
 
     return Object.assign(
-        /**
-         * Bind the uniform block to a specified index
-         * @param binding - U32. Default 0.
-         */
-        (binding: number = 0) => {
-            gl.uniformBlockBinding(program, blockIndex, binding);
-        }, 
-        {size: gl.getActiveUniformBlockParameter(program, blockIndex, gl.UNIFORM_BLOCK_DATA_SIZE) as number}
+        /** Bind the uniform block to a specified index */
+        (
+            /** u32 */
+            binding: number = 0
+        ) => gl.uniformBlockBinding(program, blockIndex, binding), 
+        {
+            size: gl.getActiveUniformBlockParameter(program, blockIndex, gl.UNIFORM_BLOCK_DATA_SIZE) as number
+        }
     )
 }
 
@@ -46,13 +46,13 @@ export function newUniformBuffer(
     );
 
     return Object.assign(bufferObject, {
-        /**
-         * Binds the uniform buffer to a specified index.
-         * @param binding - U32. Default 0.
-         */
-        bufferIndex: (binding: number = 0) => {
-            gl.bindBufferBase(gl.UNIFORM_BUFFER, binding, bufferObject.buf);
-    }})
+        bufferIndex: 
+        /** Binds the uniform buffer to a specified index */
+        (
+            /** u32 */
+            binding: number = 0
+        ) => gl.bindBufferBase(gl.UNIFORM_BUFFER, binding, bufferObject.buf)
+    })
 }
 
 /**

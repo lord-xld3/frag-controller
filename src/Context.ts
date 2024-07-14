@@ -68,8 +68,6 @@ type CanvasResizeFunction = (dpr?: number, width?: number, height?: number) => [
  * @param height - The height of the viewport.
  * @param x - The left offset of the viewport.
  * @param y - The bottom offset of the viewport.
- * 
  * @example resizeViewport(800, 600); // Resize viewport to 800x600.
- * @example resizeViewport(w, h, canvas.width/2 - w/2, canvas.height/2 - h); // Center viewport.
  */
 type ViewportResizeFunction = (width?: number, height?: number, x?: number, y?: number) => void;

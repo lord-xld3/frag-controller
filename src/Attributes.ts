@@ -21,7 +21,8 @@ export function mapAttributes(
         divisor?: number;
     }[]
 ): void {
-    for (let i = 0; i < attributes.length; i++) {
+    let i = 0, len = attributes.length;
+    for (; i < len; i++) {
         const { name, size, type, normalized, stride, offset, divisor } = attributes[i], 
             location = gl.getAttribLocation(program, name);
 
@@ -31,7 +32,8 @@ export function mapAttributes(
         };
 
         gl.enableVertexAttribArray(location);
-        gl.vertexAttribPointer(location, size, type || gl.FLOAT, normalized || false, stride || 0, offset || 0);
+        //                                   gl.float == 5126
+        gl.vertexAttribPointer(location, size, type || 5126, normalized || false, stride || 0, offset || 0);
         if (divisor) gl.vertexAttribDivisor(location, divisor);
     }
 }
