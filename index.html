@@ -1,8 +1,40 @@
 <!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Kyle's Projects"><title>Kyle's Projects</title><link rel="icon" href="favicon.ico"><link href="main.css" rel="stylesheet"></head><body><div id="overlay"><h1>I'm Kyle and I like making cool stuff.</h1><div><a href="https://www.shadertoy.com/user/xld3">ShaderToy profile</a> <a href="https://github.com/lord-xld3/frag-controller">Source Code</a></div><h3>Canvas controls<ul><li>Drag to pan.</li><li>Pinch/scroll to zoom.</li></ul><h3>Toggle panel or fullscreen button<ul><li>Double-click.</li><li>Press with 3 fingers.</li></ul></h3></h3><div id="canvas-content"></div></div><script id="background-shader" type="x-shader/x-fragment">#version 300 es
 #define A  gl_FragCoord.xy
 precision highp float;out vec3 color;uniform z{vec2 B,C;float D,E;};void main(){vec2 F=A*C-1.;float G=length(F),H=sin(D),I=length(B),J=radians((H-B.x)*G*90.)-B.x,K=sin(J),L=cos(J),M=.5+.5*H;F=mix(F,F*cos(F)/(.5+.5*G),M+I);F*=mat2(L,K,-K,L)*(2.5+M+B.y)/E;float N=D+abs(F.x*F.y)+sin(cos(D)*dot(F,F)),O=sin(3.*N+3.*I),P=1./fwidth(O),Q=smoothstep(.5,2.,G);color=vec3((.5+.5*cos(N+I+vec3(0,2,4))-Q)*(smoothstep(1.,-1.,(abs(O)-.5)*P)+smoothstep(3.,-3.,abs(O)))+smoothstep(1.,-1.,(O+.95)*P+Q));}</script><script id="mandelbrot-shader" type="x-shader/x-fragment">#version 300 es
-#define A  gl_FragCoord.xy
-precision highp float;out vec3 color;uniform z{vec2 B,C;float D,E;uvec2 F;vec2 G,H;vec3 I;float J;};void main(){float K=1./(exp(E)*C.y),L=G.y*K+G.x;vec2 M=(A+A-C)*K+H,N=M,z=M*M;int O=0,P=int(float(F.y-F.x)*pow(E/12.,2.))+int(F.x);while(O<P&&z.x<L){M=vec2(z.x-z.y+N.x,2.*M.x*M.y+N.y);z=M*M;++O;}color=(O<P)?vec3(.5+.5*cos((float(O)+1.-log2(log2(dot(M,M))/log2(L)))*J+I)):vec3(0);}</script><script id="reciprocal-shader" type="x-shader/x-fragment">#version 300 es
+    #define F gl_FragCoord.xy
+    precision highp float;
+    out vec3 o;
+    
+    uniform z {
+        vec2 iMouse, iResolution;
+        float iTime, iZoom;
+        
+        uvec2 iter;
+        vec2 esc, delta;      
+        vec3 hue;
+        float scale;
+    };
+    
+    void main() {
+        float s = iTime*.0005,
+			ct = cos(s),
+			st = sin(s),
+            g = exp(iZoom),
+            m = iZoom/12.,
+            e = esc.y-esc.x*m + esc.x;
+
+        vec2 z = (F+F - iResolution.xy) / (g*iResolution.y) + delta,
+            c = z;
+        int h = int(float(iter.y-iter.x)*m + float(iter.x)), i = 0;
+
+		
+        for (; i < h && z.x*z.x < e; z = mat2(z, -z.y, z.x)*z + c, i++);
+		vec2 rz = mat2(ct, st, -st, ct)*z;
+        o = i < h ? vec3(.5+.5*cos(
+        	hue - s + scale*(m*float(i) - log2(log2(abs(rz.x*rz.y) / log2(e)))))
+           ) 
+        : vec3(0);
+    }</script><script id="reciprocal-shader" type="x-shader/x-fragment">#version 300 es
 #define F gl_FragCoord.xy
 precision highp float;
 out vec3 color;

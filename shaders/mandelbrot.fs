@@ -1,3 +1,3 @@
 #version 300 es
 #define A  gl_FragCoord.xy
-precision highp float;out vec3 color;uniform z{vec2 B,C;float D,E;uvec2 F;vec2 G,H;vec3 I;float J;};void main(){float K=1./(exp(E)*C.y),L=G.y*K+G.x;vec2 M=(A+A-C)*K+H,N=M,z=M*M;int O=0,P=int(float(F.y-F.x)*pow(E/12.,2.))+int(F.x);while(O<P&&z.x<L){M=vec2(z.x-z.y+N.x,2.*M.x*M.y+N.y);z=M*M;++O;}color=(O<P)?vec3(.5+.5*cos((float(O)+1.-log2(log2(dot(M,M))/log2(L)))*J+I)):vec3(0);}
+precision highp float;out vec3 o;uniform z{vec2 B,C;float D,E;uvec2 F;vec2 G,H;vec3 I;float J;};void main(){float K=D*.0005,L=cos(K),M=sin(K),N=exp(E),O=E/12.,P=G.y-G.x*O+G.x;vec2 z=(A+A-C.xy)/(N*C.y)+H,Q=z;int R=int(float(F.y-F.x)*O+float(F.x)),S=0;for(;S<R&&z.x*z.x<P;z=mat2(z,-z.y,z.x)*z+Q,S++);vec2 T=mat2(L,M,-M,L)*z;o=S<R?vec3(.5+.5*cos(I-K+J*(O*float(S)-log2(log2(abs(T.x*T.y)/log2(P)))))):vec3(0);}
