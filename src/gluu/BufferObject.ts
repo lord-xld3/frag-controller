@@ -25,14 +25,10 @@ export function newBuffer(
         /** Set the contents of the WebGLBuffer */
         (
         /** A typed array or ArrayBuffer */
-        data: ArrayBufferView, 
+        data: ArrayBuffer | ArrayBufferView, 
         /** Destination offset in bytes */
         dstByteOffset: number = 0,
-        /** Destination offset in elements */
-        srcOffset: number = 0,
-        /** Optional number of elements to copy from source */
-        length?: number
-    ) => gl.bufferSubData(target, dstByteOffset, data, srcOffset, length), 
+    ) => gl.bufferSubData(target, dstByteOffset, data), 
     {
         bindBuffer,
         buf,

@@ -19,31 +19,39 @@ export default function loadMandelbrot() {
     base.bufferIndex(0)
 
     // Define uniform offsets in shader
-    const oResolution = 8,
-        oZoom = 20,
-        oMinIter = 24,
-        oMaxIter = 28,
-        oMinEsc = 32,
-        oMaxEsc = 36,
+    const oHue = 0,
+        oTime = 12,
+        oZoom = 16,
+        oEsc = 20,
+        oScale = 24,
+        oDark = 28,
+        oResolution = 32,
         oDelta = 40,
-        oHue = 48,
-        oScale = 60;
+        oMinIter = 48,
+        oMaxIter = 52;
+
+        let H: number,
+        ec: PointerEvent[] = [], // event cache
+        z = 9, // default zoom level
+        dx = -0.74, // delta x
+        dy = 0.18, // delta y
+        m = Math.exp(-z), // exp(-zoom)
+        pd = 0; // previous distance between two pointers
     
     base(new Float32Array([
-        canvas.clientWidth * dpr, canvas.clientHeight * dpr, //[8]
-        0, // Time //[16]
-        0, // Zoom //[20]
-    ]), oResolution)
+        3,4,5, // Color
+        0, // Time
+        z, // Zoom
+        250, // Escape
+        .2, // Color-Scale
+        .5, // dark
+        0, 0, // resolution
+        -0.74, 0.18, // Delta
+    ]))
     base(new Uint32Array([
-        80, // min iter //[24]
-        400] // max iter //[28]
-    ), oMinIter)
-    base(new Float32Array([
-        6, 0.5e4, // Escape //[32]
-        -0.74, 0.18, // Delta //[40]
-        3,4,5, // Color //[48]
-        0.1 // Color-Scale //[60]
-    ]), oMinEsc);
+        80, // min iter
+        400 // max iter
+    ]), oMinIter)
 
     function setZoom(z: number) {
         controlZoom.value = z.toString();;
@@ -68,7 +76,6 @@ export default function loadMandelbrot() {
             const [w, h] = resizeCanvas(dpr);
             resizeViewport(w, h);
             setResolution(w, h);
-            requestAnimationFrame(render);
         }
     });
 
@@ -78,11 +85,10 @@ export default function loadMandelbrot() {
         step: "1e-4",
         min: "0",
         max: "12",
-        value: "0",
+        value: z.toString(),
         oninput: () => {
             z = controlZoom.valueAsNumber;
             setZoom(z);
-            requestAnimationFrame(render);
         }
     })
 
@@ -96,7 +102,6 @@ export default function loadMandelbrot() {
         oninput: () => {
             controlMaxIter.min = controlMinIter.value.toString();
             base(new Uint32Array([controlMinIter.valueAsNumber]), oMinIter);
-            requestAnimationFrame(render);
         }
     })
 
@@ -106,38 +111,22 @@ export default function loadMandelbrot() {
         step: "1",
         min: "80",
         max: "1000",
-        value: "400",
+        value: "300",
         oninput: () => {
             controlMinIter.max = controlMaxIter.value.toString();
             base(new Uint32Array([controlMaxIter.valueAsNumber]), oMaxIter);
-            requestAnimationFrame(render);
         }
     })
 
-    const controlEscapeMin = Object.assign(document.createElement('input'), {
-        type: 'range',
-        id: 'minEscape',
-        step: "1e-4",
-        min: "0",
-        max: "12",
-        value: "6",
-        oninput: () => {
-            controlEscapeMax.min = controlEscapeMin.value.toString();
-            base(new Float32Array([controlEscapeMin.valueAsNumber]), oMinEsc);
-            requestAnimationFrame(render);
-        }
-    })
-
-    const controlEscapeMax = Object.assign(document.createElement('input'), {
+    const controlEsc = Object.assign(document.createElement('input'), {
         type: 'range',
         id: 'maxEscape',
         step: "1e-4",
-        min: "6",
-        max: "1e4",
-        value: "5e3",
+        min: "4",
+        max: "500",
+        value: "250",
         oninput: () => {
-            base(new Float32Array([controlEscapeMax.valueAsNumber]), oMaxEsc);
-            requestAnimationFrame(render);
+            base(new Float32Array([controlEsc.valueAsNumber]), oEsc);
         }
     })
 
@@ -152,7 +141,6 @@ export default function loadMandelbrot() {
             base(new Float32Array([
                 ...gluu.adjustNonZeroHue(3, 4, 5, controlHue.valueAsNumber)
             ]), oHue);
-            requestAnimationFrame(render);
         }
     })
 
@@ -161,21 +149,24 @@ export default function loadMandelbrot() {
         id: 'colorScale',
         step: "1e-4",
         min: "0",
-        max: ".5",
-        value: ".1",
+        max: "1",
+        value: ".2",
         oninput: () => {
             base(new Float32Array([controlColorScale.valueAsNumber]), oScale);
-            requestAnimationFrame(render);
         }
     })
     
-    let H: number,
-        ec: PointerEvent[] = [], // event cache
-        z = 0, // default zoom level
-        dx = -0.74, // delta x
-        dy = 0.18, // delta y
-        m = Math.exp(-z), // exp(-zoom)
-        pd = 0; // previous distance between two pointers
+    const controlDark = Object.assign(document.createElement('input'), {
+        type: 'range',
+        id: 'colorDark',
+        step: "1e-4",
+        min: "0",
+        max: "3",
+        value: ".5",
+        oninput: () => {
+            base(new Float32Array([controlDark.valueAsNumber]), oDark);
+        }
+    })
 
     let upfunc = (e: PointerEvent) => {
         ec = ec.filter((p)=>p.pointerId !== e.pointerId);
@@ -205,7 +196,6 @@ export default function loadMandelbrot() {
                 }
                 pd = d;
             }
-            requestAnimationFrame(render);
         },
         onpointercancel: upfunc,
         onpointerleave: upfunc,
@@ -216,7 +206,6 @@ export default function loadMandelbrot() {
     canvas.addEventListener('wheel', (e: WheelEvent) => {
         e.preventDefault();
         setZoom(z -= e.deltaY * H);
-        requestAnimationFrame(render)
     }, {passive: false});
     
     document.getElementById('canvas-content')!.append(gluu.canvasTemplate(canvas, "mandelbrot", "Mandelbrot Set Explorer",
@@ -225,10 +214,10 @@ export default function loadMandelbrot() {
         gluu.controlTemplate(controlZoom, "Zoom"),
         gluu.controlTemplate(controlMinIter, "Min Iterations"),
         gluu.controlTemplate(controlMaxIter, "Max Iterations"),
-        gluu.controlTemplate(controlEscapeMin, "Min Escape"),
-        gluu.controlTemplate(controlEscapeMax, "Max Escape"),
+        gluu.controlTemplate(controlEsc, "Escape"),
         gluu.controlTemplate(controlHue, "Hue"),
-        gluu.controlTemplate(controlColorScale, "Color Scale")
+        gluu.controlTemplate(controlColorScale, "Color Scale"),
+        gluu.controlTemplate(controlDark, "Darken"),
     ));
 
     // Resize listener.
@@ -236,16 +225,17 @@ export default function loadMandelbrot() {
         const [w, h] = resizeCanvas(dpr);
         resizeViewport(w, h);
         setResolution(w, h);
-        requestAnimationFrame(render);
     });
     window.dispatchEvent(new Event('resize'));
 
     // Setup render loop.
     gl.clearColor(0, 0, 0, 1);
 
-    function render() {
+    function render(T: number) {
         gl.clear(gl.COLOR_BUFFER_BIT);
+        base(new Float32Array([T]), oTime)
         draw();
+        requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
 }

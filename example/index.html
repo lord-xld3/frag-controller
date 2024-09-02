@@ -30,10 +30,52 @@
     </div>
 <script id="background-shader" type="x-shader/x-fragment">#version 300 es
 #define A  gl_FragCoord.xy
-precision highp float;out vec3 color;uniform z{vec2 B,C;float D,E;};void main(){vec2 F=A*C-1.;float G=length(F),H=sin(D),I=length(B),J=radians((H-B.x)*G*90.)-B.x,K=sin(J),L=cos(J),M=.5+.5*H;F=mix(F,F*cos(F)/(.5+.5*G),M+I);F*=mat2(L,K,-K,L)*(2.5+M+B.y)/E;float N=D+abs(F.x*F.y)+sin(cos(D)*dot(F,F)),O=sin(3.*N+3.*I),P=1./fwidth(O),Q=smoothstep(.5,2.,G);color=vec3((.5+.5*cos(N+I+vec3(0,2,4))-Q)*(smoothstep(1.,-1.,(abs(O)-.5)*P)+smoothstep(3.,-3.,abs(O)))+smoothstep(1.,-1.,(O+.95)*P+Q));}</script>
+precision highp float;out vec3 color;uniform z{vec2 B,C;float D,E;};void main(){vec2 F=A*C-1.;float G=length(F),H=sin(D),I=length(B),J=radians((H-B.x)*G*90.)-B.x,K=sin(J),L=cos(J),M=.5+.5*H;F=mix(F,F*cos(F)/(.5+.5*G),M+I);F*=mat2(L,K,-K,L)*(2.5+M+B.y)/E;float N=D+abs(F.x*F.y)+sin(cos(D)*dot(F,F)),O=sin(3.*N+3.*I),P=1./fwidth(O),Q=smoothstep(.5,2.,G);color=vec3((.5+.5*cos(N+I+vec3(0,2,4))-Q)*(smoothstep(1.,-1.,(abs(O)-.5)*P)+smoothstep(3.,-3.,abs(O)))+smoothstep(1.,-1.,(O+.95)*P+Q));}
+</script>
 <script id="mandelbrot-shader" type="x-shader/x-fragment">#version 300 es
-#define A  gl_FragCoord.xy
-precision highp float;out vec3 color;uniform z{vec2 B,C;float D,E;uvec2 F;vec2 G,H;vec3 I;float J;};void main(){float K=1./(exp(E)*C.y),L=G.y*K+G.x;vec2 M=(A+A-C)*K+H,N=M,z=M*M;int O=0,P=int(float(F.y-F.x)*pow(E/12.,2.))+int(F.x);while(O<P&&z.x<L){M=vec2(z.x-z.y+N.x,2.*M.x*M.y+N.y);z=M*M;++O;}color=(O<P)?vec3(.5+.5*cos((float(O)+1.-log2(log2(dot(M,M))/log2(L)))*J+I)):vec3(0);}</script>
+    #define F gl_FragCoord.xy
+    precision highp float;
+    out vec3 o;
+    
+    uniform z {
+        vec3 hue;
+        float iTime, 
+            iZoom, 
+            esc, 
+            scale,
+            dark;
+        vec2 iResolution,
+            delta;
+        uvec2 iter;
+    };
+    
+    void main() {
+        float s = iTime*.001,
+            g = exp(iZoom),
+            m = iZoom/12.,
+            e =  esc/m,
+            sc = log2(1.+scale),
+            H,
+            I;
+
+        vec2 c = (F+F - iResolution.xy) / (g*iResolution.y) + delta,
+            z;
+        int h = int(float(iter.y-iter.x)*m + float(iter.x)), 
+            i = 0;
+
+		
+        for (; i < h && z.x*z.x < e; 
+            z = vec2(z.x*z.x - z.y*z.y, 2.*z.x*z.y) + c, 
+            i++
+        );
+        I = float(i);
+        H = log2(float(h)/I);
+        o = i < h ? vec3(
+            (.5+.5*cos(sc*cos(atan(z.y, z.x)+s) + hue + I*sc + s))
+            *smoothstep(sc, dark+sc, H))
+        : vec3(0);
+    }
+</script>
 <script id="reciprocal-shader" type="x-shader/x-fragment">#version 300 es
 #define F gl_FragCoord.xy
 precision highp float;
