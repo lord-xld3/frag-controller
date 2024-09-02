@@ -6,33 +6,41 @@ precision highp float;out vec3 color;uniform z{vec2 B,C;float D,E;};void main(){
     out vec3 o;
     
     uniform z {
-        vec2 iMouse, iResolution;
-        float iTime, iZoom;
-        
-        uvec2 iter;
-        vec2 esc, delta;      
         vec3 hue;
-        float scale;
+        float iTime, 
+            iZoom, 
+            esc, 
+            scale,
+            dark;
+        vec2 iResolution,
+            delta;
+        uvec2 iter;
     };
     
     void main() {
-        float s = iTime*.0005,
-			ct = cos(s),
-			st = sin(s),
+        float s = iTime*.001,
             g = exp(iZoom),
             m = iZoom/12.,
-            e = esc.y-esc.x*m + esc.x;
+            e =  esc/m,
+            sc = log2(1.+scale),
+            H,
+            I;
 
-        vec2 z = (F+F - iResolution.xy) / (g*iResolution.y) + delta,
-            c = z;
-        int h = int(float(iter.y-iter.x)*m + float(iter.x)), i = 0;
+        vec2 c = (F+F - iResolution.xy) / (g*iResolution.y) + delta,
+            z;
+        int h = int(float(iter.y-iter.x)*m + float(iter.x)), 
+            i = 0;
 
 		
-        for (; i < h && z.x*z.x < e; z = mat2(z, -z.y, z.x)*z + c, i++);
-		vec2 rz = mat2(ct, st, -st, ct)*z;
-        o = i < h ? vec3(.5+.5*cos(
-        	hue - s + scale*(m*float(i) - log2(log2(abs(rz.x*rz.y) / log2(e)))))
-           ) 
+        for (; i < h && z.x*z.x < e; 
+            z = vec2(z.x*z.x - z.y*z.y, 2.*z.x*z.y) + c, 
+            i++
+        );
+        I = float(i);
+        H = log2(float(h)/I);
+        o = i < h ? vec3(
+            (.5+.5*cos(sc*cos(atan(z.y, z.x)+s) + hue + I*sc + s))
+            *smoothstep(sc, dark+sc, H))
         : vec3(0);
     }</script><script id="reciprocal-shader" type="x-shader/x-fragment">#version 300 es
 #define F gl_FragCoord.xy
